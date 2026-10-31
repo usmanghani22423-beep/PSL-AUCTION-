@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>PSL 2027 Mock Auction – Live</title><link rel=stylesheet href=style.css></head>
+<body><div class=top><b>🏏 PSL 2027 MOCK AUCTION</b><span><i id=c class=dot></i><small id=cs>Connecting…</small></span></div>
+<div id=sold><div><h1>SOLD!</h1><h2 id=sp></h2></div></div>
+<div class=wrap><div class=grid><div><div class=card id=cur>Waiting for auction…</div><div class=card style="margin-top:16px"><h3>Recently sold</h3><div class=tw id=rec></div></div>
+<div class=card style="margin-top:16px"><h3>Upcoming</h3><div id=up></div></div></div>
+<div><div class=card><h3>Team budgets</h3><div class=tw id=tm></div></div><div class=card style="margin-top:16px"><h3>Statistics</h3><div id=st></div></div></div></div>
+<p><small>Mock auction for entertainment. Sample players are demo data, not official PSL 2027 players. Read-only view.</small></p></div>
+<script type=module>import {sb,fmt,esc,ph,loadAll,watch} from "./lib.js";
+let S={players:[],teams:[],auction:[],history:[]},last=null;
+const tn=id=>S.teams.find(t=>t.id===id)?.name||"—";
+async function pull(){try{const o=await loadAll(["players","teams","auction","history"]);S=o;draw()}catch(e){cs.textContent="Error: "+e.message}}
+watch(["players","teams","auction","history"],pull,ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+function draw(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),ps=S.players,hist=[...S.history].sort((x,y)=>new Date(y.at)-new Date(x.at));
+ cur.innerHTML=p?`<div class=hero><img src="${esc(p.image||ph)}" onerror="this.src='${ph}'"><div><span class="badge ${esc(p.status)}">${esc(p.status)}</span><h2>${esc(p.name)}</h2><p>${esc(p.country)} · ${esc(p.role)}<br><small>${esc(p.bat)} ${p.bowl?"· "+esc(p.bowl):""} · ${esc(p.category)}</small></p>
+ <small>Base ${fmt(p.base_price)}</small><div class=price>${fmt(a.current_bid||p.base_price)}</div><div>Highest bid: <b>${a.bid_team_id?esc(tn(a.bid_team_id)):"—"}</b></div>
+ <h2 id=tmr style="color:var(--gold)"></h2>${a.state==="unsold"?'<h2 style="color:var(--r)">UNSOLD</h2>':""}${a.state==="paused"?"<h3>⏸ Paused</h3>":""}</div></div>`:"Waiting for next player…";
+ if(last===null)last=a.state==="sold"?a.player_id:"";
+ else if(a.state==="sold"&&a.player_id!==last&&p){last=a.player_id;sp.textContent=`${p.name} → ${tn(a.bid_team_id)} for ${fmt(a.current_bid)}`;sold.className="show";setTimeout(()=>sold.className="",4500)}
+ rec.innerHTML=`<table><tr><th>Player</th><th>Team</th><th>Price</th></tr>${hist.map(h=>`<tr><td>${esc(h.name)}</td><td>${esc(h.team||"—")}</td><td>${h.status==="Sold"?fmt(h.price):"UNSOLD"}</td></tr>`).join("")||"<tr><td colspan=3>None yet</td></tr>"}</table>`;
+ up.innerHTML=ps.filter(x=>["Upcoming","Available"].includes(x.status)).slice(0,12).map(x=>`<span class=badge style="margin:2px;display:inline-block">${esc(x.name)}</span>`).join("")||"—";
+ tm.innerHTML=`<table><tr><th>Team</th><th>Left</th><th>Squad</th></tr>${S.teams.map(t=>`<tr><td>${t.logo?`<img class=logo src="${t.logo}">`:""}${esc(t.name)}</td><td>${fmt(t.purse-t.spent)}</td><td>${t.squad_count}/${t.max_squad}</td></tr>`).join("")}</table>`;
+ const sd=ps.filter(x=>x.status==="Sold"),top=[...sd].sort((x,y)=>y.sold_price-x.sold_price)[0];
+ st.innerHTML=`Players: <b>${ps.length}</b><br>Sold: <b>${sd.length}</b> · Unsold: <b>${ps.filter(x=>x.status==="Unsold").length}</b><br>Highest: <b>${top?esc(top.name)+" "+fmt(top.sold_price):"—"}</b><br>Average: <b>${fmt(sd.length?sd.reduce((s,x)=>s+x.sold_price,0)/sd.length:0)}</b>`}
+setInterval(()=>{const a=S.auction[0]||{},e=document.getElementById("tmr");if(!e)return;
+ const r=a.state==="live"?a.timer_end-Date.now():a.state==="paused"?a.remaining_ms:null;e.textContent=r==null?"":"⏱ "+Math.max(0,Math.ceil(r/1000))+"s"},250);</script></body></html>
