@@ -1,2 +1,2 @@
 // Supabase > Project Settings > API. The anon key is public by design; Row Level Security protects data.
-export const SUPABASE_URL="https://ipecomyfrjdgxxlskcwj.supabase.co/rest/v1/", SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZWNvbXlmcmpkZ3h4bHNrY3dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0NjM0MDMsImV4cCI6MjEwOTAzOTQwM30.a-RaPIvWu-ZQ559c16nI6E7VjyaqnMy7kcW4mqL3LD8";
+   export const SUPABASE_URL="https://ipecomyfrjdgxxlskcwj.supabase.co", SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZWNvbXlmcmpkZ3h4bHNrY3dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0NjM0MDMsImV4cCI6MjEwOTAzOTQwM30.a-RaPIvWu-ZQ559c16nI6E7VjyaqnMy7kcW4mqL3LD8";
