@@ -2,11 +2,11 @@
 <body><div class=top><b>🏏 PSL TEAM BIDDING</b><span><i id=c class=dot></i><small id=cs>Connecting…</small></span></div>
 <div class=wrap style="max-width:640px"><div class=card id=me>Loading…</div><div class=card id=cur style="margin-top:12px"></div><div class=card id=ctl style="margin-top:12px"></div><div class=card id=sq style="margin-top:12px"></div></div>
 <div id=toast></div>
-<script type=module>import {sb,fmt,esc,ph,loadAll,watch} from "./lib.js";
+<script type=module>import {sb,fmt,esc,ph,loadAll,sync} from "./lib.js";
 const u=new URLSearchParams(location.search),TEAM=u.get("team"),CODE=u.get("code");let S={players:[],teams:[],auction:[]},valid=null,busy=false;
 const toast=(m,b)=>{const t=document.getElementById("toast");t.textContent=m;t.className="show"+(b?" bad":"");setTimeout(()=>t.className="",4000)};
 (async()=>{const {data}=await sb.rpc("check_team",{p_team:TEAM||"",p_code:CODE||""});valid=!!data;draw()})();
-watch(["players","teams","auction"],async()=>{S=await loadAll(["players","teams","auction"]);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+sync(["players","teams","auction"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
 const tn=id=>S.teams.find(t=>t.id===id)?.name||"—";
 function draw(){if(valid===false){me.innerHTML="<b style=color:var(--r)>Invalid or expired link.</b> Ask the admin for your team's bidding link.";cur.innerHTML=ctl.innerHTML=sq.innerHTML="";return}
  const t=S.teams.find(x=>x.id===TEAM);if(!t||valid===null)return;const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),mine=a.bid_team_id===TEAM,live=a.state==="live"&&p;

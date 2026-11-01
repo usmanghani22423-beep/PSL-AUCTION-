@@ -3,7 +3,7 @@
 <body><div class=top><b>🏏 PSL 2027 ADMIN</b><span><i id=c class=dot></i><a href=live.html target=_blank>Public page</a> <button class=s id=lo>Logout</button></span></div>
 <div class=app><nav id=nav></nav><main id=v></main></div><div id=toast></div>
 <script type=module>
-import {sb,fmt,esc,loadAll,watch} from "./lib.js";
+import {sb,fmt,esc,loadAll,sync} from "./lib.js";
 const S={players:[],teams:[],team_contacts:[],team_codes:[],bids:[],auction:{},history:[],notifications:[]},STAT=["Available","Upcoming","Unsold"];
 let tab="overview",q="",staged=[],chart,pick="";const $=s=>document.querySelector(s),g=id=>document.getElementById(id);
 const toast=(m,b)=>{const t=$("#toast");t.textContent=m;t.className="show"+(b?" bad":"");setTimeout(()=>t.className="",4500)};
@@ -13,11 +13,15 @@ const pm=id=>S.players.find(p=>p.id===id),tm=id=>S.teams.find(t=>t.id===id),cn=i
 const tbl=(h,r)=>`<div class=tw><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${r.map(x=>`<tr>${x.map(y=>`<td>${y}</td>`).join("")}</tr>`).join("")||`<tr><td colspan=${h.length}>No data</td></tr>`}</table></div>`;
 const save=(n,rows)=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),"Sheet1");XLSX.writeFile(wb,n)};
 const tsel=(id,v)=>`<select id=${id}><option value="">— team —</option>${S.teams.map(t=>`<option value=${t.id} ${t.id==v?"selected":""}>${esc(t.name)}</option>`).join("")}</select>`;
-async function refresh(){const o=await loadAll(["players","teams","team_contacts","team_codes","bids","auction","history","notifications"]);Object.assign(S,o,{auction:o.auction[0]||{}});if(!document.activeElement?.matches("input,select"))render();else if(tab==="auction"&&g("lv1")){g("lv1").innerHTML=dyn1();g("lv2").innerHTML=dyn2()}}
+const ALL=["players","teams","team_contacts","team_codes","bids","auction","history","notifications"];
+function apply(o){for(const k in o)S[k]=k==="auction"?(o[k][0]||{}):o[k];if(!document.activeElement?.matches("input,select"))render();else if(tab==="auction"&&g("lv1")){g("lv1").innerHTML=dyn1();g("lv2").innerHTML=dyn2()}}
+async function refresh(){apply(await loadAll(ALL))}
 $("#lo").onclick=async()=>{await sb.auth.signOut();location="login.html"};
 (async()=>{const {data:{session}}=await sb.auth.getSession();if(!session)return location="login.html";
  const ad=await W(sb.from("admins").select("user_id")).catch(()=>[]);if(!ad.length){document.body.innerHTML="<div class=wrap><div class=card>This user is not in the admins table. See README step 5.</div></div>";return}
- watch(["players","teams","auction","history","notifications","team_contacts","bids"],()=>refresh().catch(e=>toast(e.message,1)),ok=>$("#c").className="dot"+(ok?" on":""))})();
+ const R=sync(["players","teams","auction","history","notifications","team_contacts","bids"],apply,ok=>$("#c").className="dot"+(ok?" on":""));
+ setInterval(async()=>{if(document.hidden||tab!=="auction")return;try{const a=await W(sb.from("auction").select("*")),pid=a[0]?.player_id||"",[b,t]=await Promise.all([W(sb.from("bids").select("*").eq("player_id",pid)),W(sb.from("teams").select("*"))]);
+  R.set("auction",a);R.set("teams",t);R.set("bids",[...S.bids.filter(x=>x.player_id!==pid),...b])}catch(e){}},3000)})();
 const TABS=[["overview","Overview & Reports"],["players","Players"],["import","Excel Import"],["teams","Teams"],["contacts","Team Contacts"],["bidlinks","Team Bid Links"],["auction","Live Control"],["sold","Sold Players"],["unsold","Unsold Players"],["history","History"],["notes","Notifications"],["settings","Settings"]];
 $("#nav").innerHTML=TABS.map(([k,l])=>`<button data-k=${k}>${l}</button>`).join("");$("#nav").onclick=e=>{if(e.target.dataset.k){tab=e.target.dataset.k;render()}};
 const pRow=p=>[esc(p.id),esc(p.name),esc(p.country),esc(p.role),fmt(p.base_price),`<span class="badge ${p.status}">${p.status}</span>`,esc(tm(p.team_id)?.name||""),p.sold_price?fmt(p.sold_price):""];

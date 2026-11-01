@@ -5,11 +5,10 @@
 <div class=card style="margin-top:16px"><h3>Upcoming</h3><div id=up></div></div></div>
 <div><div class=card><h3>Team budgets</h3><div class=tw id=tm></div></div><div class=card style="margin-top:16px"><h3>Statistics</h3><div id=st></div></div></div></div>
 <p><small>Mock auction for entertainment. Sample players are demo data, not official PSL 2027 players. Read-only view.</small></p></div>
-<script type=module>import {sb,fmt,esc,ph,loadAll,watch} from "./lib.js";
+<script type=module>import {sb,fmt,esc,ph,loadAll,sync} from "./lib.js";
 let S={players:[],teams:[],auction:[],history:[]},last=null;
 const tn=id=>S.teams.find(t=>t.id===id)?.name||"—";
-async function pull(){try{const o=await loadAll(["players","teams","auction","history"]);S=o;draw()}catch(e){cs.textContent="Error: "+e.message}}
-watch(["players","teams","auction","history"],pull,ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+sync(["players","teams","auction","history"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
 function draw(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),ps=S.players,hist=[...S.history].sort((x,y)=>new Date(y.at)-new Date(x.at));
  cur.innerHTML=p?`<div class=hero><img src="${esc(p.image||ph)}" onerror="this.src='${ph}'"><div><span class="badge ${esc(p.status)}">${esc(p.status)}</span><h2>${esc(p.name)}</h2><p>${esc(p.country)} · ${esc(p.role)}<br><small>${esc(p.bat)} ${p.bowl?"· "+esc(p.bowl):""} · ${esc(p.category)}</small></p>
  <small>Base ${fmt(p.base_price)}</small><div class=price>${fmt(a.current_bid||p.base_price)}</div><div>Highest bid: <b>${a.bid_team_id?esc(tn(a.bid_team_id)):"—"}</b></div>
