@@ -2,21 +2,24 @@
 <body><div class=top><b>🏏 PSL TEAM BIDDING</b><span><i id=c class=dot></i><small id=cs>Connecting…</small></span></div>
 <div class=wrap style="max-width:640px"><div class=card id=me>Loading…</div><div class=card id=cur style="margin-top:12px"></div><div class=card id=ctl style="margin-top:12px"></div><div class=card id=cust style="margin-top:12px;display:none"><b>Bid your own amount</b><div class=row><input id=bidamt type=number step=any min=0 placeholder="Amount" style="flex:1;min-width:120px"><select id=bidunit><option value=10000000>Crore</option><option value=100000>Lakh</option><option value=1>Rs.</option></select><button id=bidgo>Place bid</button></div><small id=bidprev></small><br><small id=bidmin></small></div><div class=card id=sq style="margin-top:12px"></div></div>
 <div id=toast></div>
-<script type=module>import {sb,fmt,esc,ph,loadAll,sync,squad} from "./lib.js";
-const u=new URLSearchParams(location.search),TEAM=u.get("team"),CODE=u.get("code");let S={players:[],teams:[],auction:[]},valid=null,busy=false;
+<script type=module>import {sb,fmt,esc,ph,loadAll,sync,squad,stepFor} from "./lib.js";
+const u=new URLSearchParams(location.search),TEAM=u.get("team"),CODE=u.get("code");let S={players:[],teams:[],auction:[],bid_rules:[]},valid=null,busy=false;
 const toast=(m,b)=>{const t=document.getElementById("toast");t.textContent=m;t.className="show"+(b?" bad":"");setTimeout(()=>t.className="",4000)};
 (async()=>{const {data}=await sb.rpc("check_team",{p_team:TEAM||"",p_code:CODE||""});valid=!!data;draw()})();
-sync(["players","teams","auction"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+sync(["players","teams","auction","bid_rules"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+let prevMine=false,ac=null;document.addEventListener("click",()=>{ac=ac||new(window.AudioContext||window.webkitAudioContext)()},{once:true});
+const beep=()=>{if(!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=520;g.gain.value=.2;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.4)};
 const tn=id=>S.teams.find(t=>t.id===id)?.name||"—";
 function draw(){if(valid===false){me.innerHTML="<b style=color:var(--r)>Invalid or expired link.</b> Ask the admin for your team's bidding link.";cur.innerHTML=ctl.innerHTML=sq.innerHTML="";return}
  const t=S.teams.find(x=>x.id===TEAM);if(!t||valid===null)return;const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),mine=a.bid_team_id===TEAM,live=a.state==="live"&&p;
+ if(prevMine&&a.state==="live"&&a.bid_team_id&&!mine){toast("⚠ Outbid by "+tn(a.bid_team_id)+" – "+fmt(a.current_bid),1);navigator.vibrate?.([200,100,200]);beep()}prevMine=mine;
  me.innerHTML=`<h3>${esc(t.name)}</h3><div class=row style="gap:18px"><div><small>Total purse</small><br><b>${fmt(t.purse)}</b></div><div><small>Spent</small><br><b>${fmt(t.spent)}</b></div><div><small>Remaining</small><br><b style="color:var(--gold)">${fmt(t.purse-t.spent)}</b></div><div><small>Squad</small><br><b>${t.squad_count}/${t.max_squad}</b></div></div>`;
  cur.innerHTML=p?`<div class=hero><img style="width:110px;height:110px" src="${esc(p.image||ph)}" onerror="this.src='${ph}'"><div><h2>${esc(p.name)}</h2><small>${esc(p.country)} · ${esc(p.role)} · Base ${fmt(p.base_price)}</small><div class=price>${fmt(a.current_bid)}</div>
   <div>Highest: <b>${a.bid_team_id?esc(tn(a.bid_team_id)):"no bid yet"}</b>${mine?" (you)":""}</div><h2 id=tmr style="color:var(--gold)"></h2>
   ${a.state==="sold"?`<h2 style="color:var(--g)">SOLD to ${esc(tn(a.bid_team_id))}</h2>`:a.state==="unsold"?'<h2 style="color:var(--r)">UNSOLD</h2>':a.state==="paused"?"<h3>⏸ Paused</h3>":""}</div></div>`:"Waiting for next player…";
- const opts=live?[...(a.bid_team_id?[]:[a.current_bid]),...[500000,1000000,5000000].map(s=>a.current_bid+s)]:[];
+ const st=stepFor(S.bid_rules,a.current_bid||0),mn=a.bid_team_id?a.current_bid+st:a.current_bid,opts=live?[0,1,3].map(k=>mn+k*st):[];
  ctl.innerHTML=live?`<div class=row>${opts.map(v=>`<button class=bb data-v=${v} style="flex:1;min-width:140px;padding:14px" ${mine?"disabled":""}>Bid ${fmt(v)}</button>`).join("")}</div>${mine?"<small>You hold the highest bid.</small>":""}`:"<small>Bidding opens when the admin starts a player.</small>";
- sq.innerHTML=((mp)=>`<h3>My squad (${mp.length}/${t.max_squad})</h3>`+squad(mp))(S.players.filter(x=>x.team_id===TEAM&&x.status==="Sold"));cust.style.display=live?"block":"none";bidgo.disabled=mine;bidmin.textContent=live?(a.bid_team_id?"Must be higher than "+fmt(a.current_bid):"Minimum "+fmt(a.current_bid)):""}
+ sq.innerHTML=((mp)=>`<h3>My squad (${mp.length}/${t.max_squad})</h3>`+squad(mp))(S.players.filter(x=>x.team_id===TEAM&&x.status==="Sold"));cust.style.display=live?"block":"none";bidgo.disabled=mine;bidmin.textContent=live?"Minimum bid: "+fmt(mn)+" (raise of "+fmt(st)+")":""}
 const cv=()=>Math.round(Number(bidamt.value)*Number(bidunit.value));
 bidamt.oninput=bidunit.onchange=()=>{bidprev.textContent=cv()>0?"= "+fmt(cv()):""};
 bidgo.onclick=async()=>{const v=cv();if(!(v>0))return toast("Enter an amount",1);if(busy||!confirm("Place bid of "+fmt(v)+"?"))return;busy=true;bidgo.disabled=true;

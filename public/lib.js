@@ -8,7 +8,7 @@ export async function loadAll(tables){const o={};await Promise.all(tables.map(as
 export function watch(tables,cb,st){const ch=sb.channel("rt"+Math.random());tables.forEach(t=>ch.on("postgres_changes",{event:"*",schema:"public",table:t},cb));
  ch.subscribe(s=>{const ok=s==="SUBSCRIBED";st&&st(ok);if(ok)cb()});return ch}
 
-const PK={players:"id",teams:"id",history:"player_id",bids:"id",notifications:"player_id",team_contacts:"team_id",auction:"id"};
+const PK={players:"id",teams:"id",history:"player_id",bids:"id",notifications:"player_id",team_contacts:"team_id",auction:"id",bid_rules:"min_price"};
 // Row-level realtime store: applies INSERT/UPDATE/DELETE events directly (no refetch), full reload on every (re)connect.
 export function sync(tables,apply,st){const store={};let tm;const sched=()=>{clearTimeout(tm);tm=setTimeout(()=>apply(store),100)};
  const full=async()=>{const o=await loadAll(tables);tables.forEach(t=>store[t]=o[t]);apply(store)};
@@ -23,3 +23,4 @@ export const foreign=p=>{const c=String(p.country||"").trim().toLowerCase();retu
 export const cat=p=>{const r=String(p.role||"").toLowerCase();return /keeper|wk/.test(r)?"Wicketkeeper":/all/.test(r)?"All-rounder":/bowl/.test(r)?"Bowler":/bat/.test(r)?"Batter":"Other"};
 export const CATS=["Batter","Wicketkeeper","All-rounder","Bowler","Other"];
 export function squad(list){return CATS.map(c=>{const ps=list.filter(p=>cat(p)===c);return ps.length?`<div style="margin:8px 0"><small>${c} (${ps.length})</small>${ps.map(p=>`<div>${esc(p.name)}${foreign(p)?" ✈️":""} ${p.acq?`<span class=badge>${esc(p.acq)}</span>`:""} <small>${p.sold_price?fmt(p.sold_price):""}</small></div>`).join("")}</div>`:""}).join("")||"<small>No players yet</small>"}
+export const stepFor=(rules,price)=>{let s=2500000;[...rules].sort((a,b)=>a.min_price-b.min_price).forEach(r=>{if(price>=r.min_price)s=r.step});return s};

@@ -22,3 +22,4 @@ nav button{background:none;text-align:left;color:var(--m);white-space:nowrap}nav
 .logo{width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px}
 details{border-bottom:1px solid #22306a;padding:6px 0}summary{cursor:pointer;padding:6px 0}
 @media(max-width:800px){.wrap{padding:10px}main{padding:10px}.hero{flex-direction:column;text-align:center}.hero img{width:130px;height:130px}.price{font-size:2em}.top{padding:10px 12px}.top b{font-size:.85em}button,select,input,a.btn{min-height:42px}.cards{grid-template-columns:repeat(2,1fr)}th,td{padding:6px 4px}}
+@media print{.top,nav,button,#toast,a.btn{display:none!important}body{background:#fff;color:#000}.card{background:#fff;color:#000;border:1px solid #999}small,th{color:#444}.badge{background:#ddd;color:#000}}
