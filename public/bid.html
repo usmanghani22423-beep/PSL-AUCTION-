@@ -1,6 +1,6 @@
 <!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>PSL Team Bidding</title><link rel=stylesheet href=style.css></head>
 <body><div class=top><b>🏏 PSL TEAM BIDDING</b><span><i id=c class=dot></i><small id=cs>Connecting…</small></span></div>
-<div class=wrap style="max-width:640px"><div class=card id=me>Loading…</div><div class=card id=cur style="margin-top:12px"></div><div class=card id=ctl style="margin-top:12px"></div><div class=card id=sq style="margin-top:12px"></div></div>
+<div class=wrap style="max-width:640px"><div class=card id=me>Loading…</div><div class=card id=cur style="margin-top:12px"></div><div class=card id=ctl style="margin-top:12px"></div><div class=card id=cust style="margin-top:12px;display:none"><b>Bid your own amount</b><div class=row><input id=bidamt type=number step=any min=0 placeholder="Amount" style="flex:1;min-width:120px"><select id=bidunit><option value=10000000>Crore</option><option value=100000>Lakh</option><option value=1>Rs.</option></select><button id=bidgo>Place bid</button></div><small id=bidprev></small><br><small id=bidmin></small></div><div class=card id=sq style="margin-top:12px"></div></div>
 <div id=toast></div>
 <script type=module>import {sb,fmt,esc,ph,loadAll,sync,squad} from "./lib.js";
 const u=new URLSearchParams(location.search),TEAM=u.get("team"),CODE=u.get("code");let S={players:[],teams:[],auction:[]},valid=null,busy=false;
@@ -16,7 +16,11 @@ function draw(){if(valid===false){me.innerHTML="<b style=color:var(--r)>Invalid 
   ${a.state==="sold"?`<h2 style="color:var(--g)">SOLD to ${esc(tn(a.bid_team_id))}</h2>`:a.state==="unsold"?'<h2 style="color:var(--r)">UNSOLD</h2>':a.state==="paused"?"<h3>⏸ Paused</h3>":""}</div></div>`:"Waiting for next player…";
  const opts=live?[...(a.bid_team_id?[]:[a.current_bid]),...[500000,1000000,5000000].map(s=>a.current_bid+s)]:[];
  ctl.innerHTML=live?`<div class=row>${opts.map(v=>`<button class=bb data-v=${v} style="flex:1;min-width:140px;padding:14px" ${mine?"disabled":""}>Bid ${fmt(v)}</button>`).join("")}</div>${mine?"<small>You hold the highest bid.</small>":""}`:"<small>Bidding opens when the admin starts a player.</small>";
- sq.innerHTML=((mp)=>`<h3>My squad (${mp.length}/${t.max_squad})</h3>`+squad(mp))(S.players.filter(x=>x.team_id===TEAM&&x.status==="Sold"))}
+ sq.innerHTML=((mp)=>`<h3>My squad (${mp.length}/${t.max_squad})</h3>`+squad(mp))(S.players.filter(x=>x.team_id===TEAM&&x.status==="Sold"));cust.style.display=live?"block":"none";bidgo.disabled=mine;bidmin.textContent=live?(a.bid_team_id?"Must be higher than "+fmt(a.current_bid):"Minimum "+fmt(a.current_bid)):""}
+const cv=()=>Math.round(Number(bidamt.value)*Number(bidunit.value));
+bidamt.oninput=bidunit.onchange=()=>{bidprev.textContent=cv()>0?"= "+fmt(cv()):""};
+bidgo.onclick=async()=>{const v=cv();if(!(v>0))return toast("Enter an amount",1);if(busy||!confirm("Place bid of "+fmt(v)+"?"))return;busy=true;bidgo.disabled=true;
+ const {error}=await sb.rpc("place_bid",{p_team:TEAM,p_code:CODE,p_bid:v});busy=false;error?toast(error.message,1):(toast("Bid placed: "+fmt(v)),bidamt.value="",bidprev.textContent="");draw()};
 ctl.onclick=async e=>{const b=e.target.closest(".bb");if(!b||busy)return;busy=true;document.querySelectorAll(".bb").forEach(x=>x.disabled=true);
  const {error}=await sb.rpc("place_bid",{p_team:TEAM,p_code:CODE,p_bid:Number(b.dataset.v)});busy=false;error?toast(error.message,1):toast("Bid placed: "+fmt(b.dataset.v));draw()};
 setInterval(()=>{const a=S.auction[0]||{},e=document.getElementById("tmr");if(!e)return;const r=a.state==="live"?(a.timer_end==null?null:a.timer_end-Date.now()):a.state==="paused"?a.remaining_ms:null;
