@@ -27,7 +27,7 @@ function draw(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id)
  const feed=S.bids.filter(b=>b.player_id===a.player_id).sort((x,y)=>new Date(y.at)-new Date(x.at)).slice(0,8);
  put(tk,feed.map(b=>`<div>${esc(tn(b.team_id))} — <b>${fmt(b.amount)}</b> <small>${new Date(b.at).toLocaleTimeString()}</small></div>`).join("")||"<small>No bids yet</small>");
  put(rec,`<table><tr><th>Player</th><th>Team</th><th>Price</th></tr>${hist.map(h=>`<tr><td>${esc(h.name)}</td><td>${esc(h.team||"—")}</td><td>${h.status==="Unsold"?"UNSOLD":fmt(h.price)+(h.status!=="Sold"?" ("+esc(h.status)+")":"")}</td></tr>`).join("")||"<tr><td colspan=3>None yet</td></tr>"}</table>`);
- put(up,ps.filter(x=>["Upcoming","Available"].includes(x.status)).sort((a,b)=>(a.queue??1e9)-(b.queue??1e9)).slice(0,12).map(x=>`<span class=badge style="margin:2px;display:inline-block">${esc(x.name)}</span>`).join("")||"—");
+ put(up,ps.filter(x=>["Upcoming","Available"].includes(x.status)).slice(0,12).map(x=>`<span class=badge style="margin:2px;display:inline-block">${esc(x.name)}</span>`).join("")||"—");
  put(tm,S.teams.map(t=>`<div style="margin-bottom:10px">${t.logo?`<img class=logo src="${t.logo}">`:""}<b>${esc(t.name)}</b> <small>${t.squad_count}/${t.max_squad}</small><div class=bar><i style="width:${Math.max(0,Math.min(100,100-t.spent/t.purse*100))}%"></i></div><small>Left ${fmt(t.purse-t.spent)} of ${fmt(t.purse)}</small></div>`).join(""));
  const sd=ps.filter(x=>x.status==="Sold"&&!x.acq),top=[...sd].sort((x,y)=>y.sold_price-x.sold_price);
  put(document.getElementById("top"),top.slice(0,5).map((x,i)=>`<div>${i+1}. ${esc(x.name)}${foreign(x)?" ✈️":""} <small>${esc(tn(x.team_id))}</small> — <b>${fmt(x.sold_price)}</b></div>`).join("")||"<small>No sales yet</small>");
