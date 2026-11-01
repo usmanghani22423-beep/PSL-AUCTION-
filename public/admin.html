@@ -5,7 +5,7 @@
 <script type=module>
 import {sb,fmt,esc,loadAll,sync} from "./lib.js";
 const S={players:[],teams:[],team_contacts:[],team_codes:[],bids:[],auction:{},history:[],notifications:[]},STAT=["Available","Upcoming","Unsold"];
-let tab="overview",q="",staged=[],chart,pick="";const $=s=>document.querySelector(s),g=id=>document.getElementById(id);
+let lastR={},tab="overview",q="",staged=[],chart,pick="";const $=s=>document.querySelector(s),g=id=>document.getElementById(id);
 const toast=(m,b)=>{const t=$("#toast");t.textContent=m;t.className="show"+(b?" bad":"");setTimeout(()=>t.className="",4500)};
 const W=async p=>{const r=await p;if(r.error)throw r.error;return r.data};
 const run=async(f,ok)=>{try{await f();ok&&toast(ok)}catch(e){toast(e.message||String(e),1)}};
@@ -14,14 +14,16 @@ const tbl=(h,r)=>`<div class=tw><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}
 const save=(n,rows)=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),"Sheet1");XLSX.writeFile(wb,n)};
 const tsel=(id,v)=>`<select id=${id}><option value="">— team —</option>${S.teams.map(t=>`<option value=${t.id} ${t.id==v?"selected":""}>${esc(t.name)}</option>`).join("")}</select>`;
 const ALL=["players","teams","team_contacts","team_codes","bids","auction","history","notifications"];
-function apply(o){for(const k in o)S[k]=k==="auction"?(o[k][0]||{}):o[k];if(!document.activeElement?.matches("input,select"))render();else if(tab==="auction"&&g("lv1")){g("lv1").innerHTML=dyn1();g("lv2").innerHTML=dyn2()}}
+function apply(o){for(const k in o)S[k]=k==="auction"?(o[k][0]||{}):o[k];
+ if(tab==="auction"&&g("lv1")){const set=(id,h)=>{const e=g(id);if(e&&e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}};set("lv1",dyn1());set("lv2",dyn2());set("pl",popts());return}
+ if(!document.activeElement?.matches("input,select"))render()}
 async function refresh(){apply(await loadAll(ALL))}
 $("#lo").onclick=async()=>{await sb.auth.signOut();location="login.html"};
 (async()=>{const {data:{session}}=await sb.auth.getSession();if(!session)return location="login.html";
  const ad=await W(sb.from("admins").select("user_id")).catch(()=>[]);if(!ad.length){document.body.innerHTML="<div class=wrap><div class=card>This user is not in the admins table. See README step 5.</div></div>";return}
  const R=sync(["players","teams","auction","history","notifications","team_contacts","bids"],apply,ok=>$("#c").className="dot"+(ok?" on":""));
  setInterval(async()=>{if(document.hidden||tab!=="auction")return;try{const a=await W(sb.from("auction").select("*")),pid=a[0]?.player_id||"",[b,t]=await Promise.all([W(sb.from("bids").select("*").eq("player_id",pid)),W(sb.from("teams").select("*"))]);
-  R.set("auction",a);R.set("teams",t);R.set("bids",[...S.bids.filter(x=>x.player_id!==pid),...b])}catch(e){}},3000)})();
+  const sig=JSON.stringify([a,t,b]);if(sig===window._ps)return;window._ps=sig;R.set("auction",a);R.set("teams",t);R.set("bids",[...S.bids.filter(x=>x.player_id!==pid),...b])}catch(e){}},3000)})();
 const TABS=[["overview","Overview & Reports"],["players","Players"],["import","Excel Import"],["teams","Teams"],["contacts","Team Contacts"],["bidlinks","Team Bid Links"],["auction","Live Control"],["sold","Sold Players"],["unsold","Unsold Players"],["history","History"],["notes","Notifications"],["settings","Settings"]];
 $("#nav").innerHTML=TABS.map(([k,l])=>`<button data-k=${k}>${l}</button>`).join("");$("#nav").onclick=e=>{if(e.target.dataset.k){tab=e.target.dataset.k;render()}};
 const pRow=p=>[esc(p.id),esc(p.name),esc(p.country),esc(p.role),fmt(p.base_price),`<span class="badge ${p.status}">${p.status}</span>`,esc(tm(p.team_id)?.name||""),p.sold_price?fmt(p.sold_price):""];
@@ -35,6 +37,7 @@ const dyn2=()=>{const a=S.auction,p=pm(a.player_id),hb=tm(a.bid_team_id),last={}
  <div class=row><button class=g onclick="A.sold()" ${can?"":"disabled"}>${a.state==="sold"?"✔ Already SOLD to "+esc(hb?.name)+" – pick next player":hb?"✔ SOLD to "+esc(hb.name)+" for "+fmt(a.current_bid):"✔ SOLD (waiting for first bid)"}</button><button class=d onclick="A.unsold()">✖ Mark UNSOLD</button><button class=s onclick="A.edit('${esc(a.player_id||"")}')">Edit player</button><button class=d onclick="A.reset()">Reset auction</button></div></div>
  ${p?`<div class=card style="margin:8px 0"><b>Live bids</b>${feed.map(b=>`<div>${esc(tm(b.team_id)?.name)} — <b>${fmt(b.amount)}</b> <small>${new Date(b.at).toLocaleTimeString()}</small></div>`).join("")||"<small>No bids yet</small>"}</div>`:""}
  ${p?tbl(["Team","Bid status","Last bid","Purse left"],S.teams.map(t=>{const l=last[t.id];return [esc(t.name),a.bid_team_id===t.id?'<span class="badge Sold">🏆 Highest</span>':l?'<span class=badge>Bid placed</span>':"<small>No bid</small>",l?fmt(l.amount):"—",fmt(t.purse-t.spent)]})):""}`};
+const popts=()=>S.players.filter(x=>x.status!=="Sold").map(x=>`<option value="${esc(x.name+" · "+x.id)}">`).join("");
 const V={
 overview(){const ps=S.players,sd=ps.filter(p=>p.status==="Sold"),top=[...sd].sort((a,b)=>b.sold_price-a.sold_price)[0],sum=sd.reduce((a,p)=>a+p.sold_price,0),mt=[...S.teams].sort((a,b)=>b.spent-a.spent)[0];
  return `<div class=cards>${[["Players",ps.length],["Sold",sd.length],["Unsold",ps.filter(p=>p.status==="Unsold").length],["Highest",top?top.name+" · "+fmt(top.sold_price):"—"],["Average",fmt(sd.length?sum/sd.length:0)],["Top spender",mt&&mt.spent?mt.name:"—"]].map(([a,b])=>`<div class=card><small>${a}</small><b>${esc(b)}</b></div>`).join("")}</div><div class=card><canvas id=ch height=80></canvas></div><br>`+
@@ -50,7 +53,7 @@ contacts(){return S.teams.map(t=>{const c=cn(t.id),k=t.id;return `<div class=car
 bidlinks(){const base=location.origin;return `<p><small>Each team gets a private link with a secret code. Anyone with a link can bid for that team, so send it only to that team's manager. Regenerating invalidates the old links.</small></p><div class=row><button onclick="A.genCodes()">Generate / regenerate all links</button></div>`+tbl(["Team","Link","Share"],S.teams.map(t=>{const c=S.team_codes.find(x=>x.team_id===t.id);if(!c)return [esc(t.name),"—",""];const u=`${base}/bid.html?team=${t.id}&code=${c.code}`;return [esc(t.name),`<small>${esc(u)}</small>`,`<button class=s onclick="A.copy('${u}')">Copy</button> <a class=btn target=_blank href="https://wa.me/${String(cn(t.id).whatsapp||"").replace(/\D/g,"")}?text=${encodeURIComponent("Your PSL mock auction bidding link (private): "+u)}">WhatsApp</a>`]}))},
 auction(){const pp=pm(pick),lab=x=>x.name+" · "+x.id;
  return `<div class=card><h3 id=lv1>${dyn1()}</h3>
- <div class=row><input id=ap list=pl placeholder="Type player name…" style="min-width:260px" value="${pp?esc(lab(pp)):""}" oninput="A.pickp(this.value)"><datalist id=pl>${S.players.filter(x=>x.status!=="Sold").map(x=>`<option value="${esc(lab(x))}">`).join("")}</datalist>
+ <div class=row><input id=ap list=pl placeholder="Type player name…" style="min-width:260px" value="${pp?esc(lab(pp)):""}" oninput="A.pickp(this.value)"><datalist id=pl>${popts()}</datalist>
  <b id=bpl style="color:var(--gold)">${pp?"Base "+fmt(pp.base_price):""}</b><label><small>Timer sec (0 = no timer)</small> <input id=sec type=number value=0 style="width:70px"></label><button onclick="A.load()">Start player</button><button class=s onclick="A.pause()">Pause</button><button class=s onclick="A.resume()">Resume</button></div>
  <div id=lv2>${dyn2()}</div>
  <details style="margin-top:8px"><summary>Manual bid (admin enters on behalf of a team)</summary><div class=row>${tsel("bt","")}<input id=bp type=number placeholder="Price"><button onclick="A.bid()">Update bid</button>${[500000,1000000,5000000].map(n=>`<button class=s onclick="A.inc(${n})">+${n/1000}k</button>`).join("")}</div></details></div>`},
@@ -60,7 +63,7 @@ notes(){return `<p><small>Email is sent automatically through the server when co
  tbl(["Player","Team","Email","WhatsApp","Time","Actions"],[...S.notifications].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(n=>{const m=msg(n.player_id);return [esc(n.name),esc(n.team),`<span class="badge ${n.email_status}">${n.email_status}</span> <small>${esc(n.email_error||"")}</small>`,`<span class=badge>${n.wa_status}</span>`,new Date(n.created_at).toLocaleString(),
  `<button onclick="A.mail('${esc(n.player_id)}',1)">Send / resend email</button> <a class="btn s" style="background:#2c3d78" href="${m.mail}">Open mail app</a> <button class=g onclick="A.share('${esc(n.player_id)}')">WhatsApp Share</button>`]}))},
 settings(){return `<div class=card><h3>Change password</h3><div class=row><input id=np type=password placeholder="New password (min 8)"><button onclick="A.pw()">Update</button></div></div><br><div class=card><h3>Backup</h3><button onclick="A.backup()">Download full JSON backup</button></div>`}};
-function render(){document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.k===tab));$("#v").innerHTML=V[tab]();
+function render(){document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.k===tab));const h=V[tab]();if(lastR.t===tab&&lastR.h===h)return;lastR={t:tab,h};$("#v").innerHTML=h;
  if(tab==="overview"){chart?.destroy();chart=new Chart($("#ch"),{type:"bar",data:{labels:S.teams.map(t=>t.name),datasets:[{label:"Spent (Rs.)",data:S.teams.map(t=>t.spent),backgroundColor:"#01a35c"}]},options:{plugins:{legend:{labels:{color:"#fff"}}},scales:{x:{ticks:{color:"#9fb0d9"}},y:{ticks:{color:"#9fb0d9"}}}}})}}
 const A=window.A={q(v){q=v.toLowerCase();render();const n=g("q");n.focus();n.setSelectionRange(v.length,v.length)},
  add(){const id=prompt("Player ID");if(!id)return;const name=prompt("Name"),bp=Number(prompt("Base price (PKR)"));if(!name||!(bp>0))return toast("Name and base price required",1);
