@@ -4,7 +4,7 @@
 <div class=app><nav id=nav></nav><main id=v></main></div><div id=toast></div>
 <script type=module>
 import {sb,fmt,esc,loadAll,watch} from "./lib.js";
-const S={players:[],teams:[],team_contacts:[],auction:{},history:[],notifications:[]},STAT=["Available","Upcoming","Unsold"];
+const S={players:[],teams:[],team_contacts:[],team_codes:[],auction:{},history:[],notifications:[]},STAT=["Available","Upcoming","Unsold"];
 let tab="overview",q="",staged=[],chart;const $=s=>document.querySelector(s),g=id=>document.getElementById(id);
 const toast=(m,b)=>{const t=$("#toast");t.textContent=m;t.className="show"+(b?" bad":"");setTimeout(()=>t.className="",4500)};
 const W=async p=>{const r=await p;if(r.error)throw r.error;return r.data};
@@ -13,12 +13,12 @@ const pm=id=>S.players.find(p=>p.id===id),tm=id=>S.teams.find(t=>t.id===id),cn=i
 const tbl=(h,r)=>`<div class=tw><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${r.map(x=>`<tr>${x.map(y=>`<td>${y}</td>`).join("")}</tr>`).join("")||`<tr><td colspan=${h.length}>No data</td></tr>`}</table></div>`;
 const save=(n,rows)=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),"Sheet1");XLSX.writeFile(wb,n)};
 const tsel=(id,v)=>`<select id=${id}><option value="">— team —</option>${S.teams.map(t=>`<option value=${t.id} ${t.id==v?"selected":""}>${esc(t.name)}</option>`).join("")}</select>`;
-async function refresh(){const o=await loadAll(["players","teams","team_contacts","auction","history","notifications"]);Object.assign(S,o,{auction:o.auction[0]||{}});if(!document.activeElement?.matches("input,select"))render()}
+async function refresh(){const o=await loadAll(["players","teams","team_contacts","team_codes","auction","history","notifications"]);Object.assign(S,o,{auction:o.auction[0]||{}});if(!document.activeElement?.matches("input,select"))render()}
 $("#lo").onclick=async()=>{await sb.auth.signOut();location="login.html"};
 (async()=>{const {data:{session}}=await sb.auth.getSession();if(!session)return location="login.html";
  const ad=await W(sb.from("admins").select("user_id")).catch(()=>[]);if(!ad.length){document.body.innerHTML="<div class=wrap><div class=card>This user is not in the admins table. See README step 5.</div></div>";return}
  watch(["players","teams","auction","history","notifications","team_contacts"],()=>refresh().catch(e=>toast(e.message,1)),ok=>$("#c").className="dot"+(ok?" on":""))})();
-const TABS=[["overview","Overview & Reports"],["players","Players"],["import","Excel Import"],["teams","Teams"],["contacts","Team Contacts"],["auction","Live Control"],["sold","Sold Players"],["unsold","Unsold Players"],["history","History"],["notes","Notifications"],["settings","Settings"]];
+const TABS=[["overview","Overview & Reports"],["players","Players"],["import","Excel Import"],["teams","Teams"],["contacts","Team Contacts"],["bidlinks","Team Bid Links"],["auction","Live Control"],["sold","Sold Players"],["unsold","Unsold Players"],["history","History"],["notes","Notifications"],["settings","Settings"]];
 $("#nav").innerHTML=TABS.map(([k,l])=>`<button data-k=${k}>${l}</button>`).join("");$("#nav").onclick=e=>{if(e.target.dataset.k){tab=e.target.dataset.k;render()}};
 const pRow=p=>[esc(p.id),esc(p.name),esc(p.country),esc(p.role),fmt(p.base_price),`<span class="badge ${p.status}">${p.status}</span>`,esc(tm(p.team_id)?.name||""),p.sold_price?fmt(p.sold_price):""];
 const PH=["ID","Name","Country","Role","Base","Status","Team","Sold for"];
@@ -36,6 +36,7 @@ teams(){return S.teams.map(t=>`<div class=card style="margin-bottom:12px"><div c
  <small>Spent ${fmt(t.spent)} · Remaining ${fmt(t.purse-t.spent)} · Squad ${t.squad_count}/${t.max_squad} · ${S.players.filter(p=>p.team_id===t.id).map(p=>esc(p.name)+" ("+esc(p.role)+")").join(", ")||"no players"}</small></div>`).join("")},
 contacts(){return S.teams.map(t=>{const c=cn(t.id),k=t.id;return `<div class=card style="margin-bottom:12px"><b>${esc(t.name)}</b><div class=row><input id=cm_${k} placeholder="Manager" value="${esc(c.manager)}"><input id=ce_${k} type=email placeholder=Email value="${esc(c.email)}"><input id=cw_${k} placeholder="WhatsApp +92…" value="${esc(c.whatsapp)}"></div>
  <div class=row><label><input type=checkbox id=cp_${k} ${c.email_pref?"checked":""}> Email</label><label><input type=checkbox id=cq_${k} ${c.wa_pref?"checked":""}> WhatsApp share</label><label><input type=checkbox id=cc_${k} ${c.wa_consent?"checked":""}> Manager consented</label><button onclick="A.saveContact('${k}')">Save</button></div></div>`}).join("")},
+bidlinks(){const base=location.origin;return `<p><small>Each team gets a private link with a secret code. Anyone with a link can bid for that team, so send it only to that team's manager. Regenerating invalidates the old links.</small></p><div class=row><button onclick="A.genCodes()">Generate / regenerate all links</button></div>`+tbl(["Team","Link","Share"],S.teams.map(t=>{const c=S.team_codes.find(x=>x.team_id===t.id);if(!c)return [esc(t.name),"—",""];const u=`${base}/bid.html?team=${t.id}&code=${c.code}`;return [esc(t.name),`<small>${esc(u)}</small>`,`<button class=s onclick="A.copy('${u}')">Copy</button> <a class=btn target=_blank href="https://wa.me/${String(cn(t.id).whatsapp||"").replace(/\D/g,"")}?text=${encodeURIComponent("Your PSL mock auction bidding link (private): "+u)}">WhatsApp</a>`]}))},
 auction(){const a=S.auction,p=pm(a.player_id);return `<div class=card><h3>${p?esc(p.name)+" · "+fmt(a.current_bid)+" · "+(tm(a.bid_team_id)?.name||"no bid"):"No player loaded"} <span class=badge>${a.state||"idle"}</span></h3>
  <div class=row><select id=ap><option value="">— select player —</option>${S.players.filter(x=>x.status!=="Sold").map(x=>`<option value="${esc(x.id)}" ${x.id===a.player_id?"selected":""}>${esc(x.name)} (${x.status})</option>`).join("")}</select><input id=sec type=number value=60 style="width:80px"><button onclick="A.load()">Start / load player</button><button class=s onclick="A.pause()">Pause</button><button class=s onclick="A.resume()">Resume</button></div>
  <div class=row>${tsel("bt",a.bid_team_id)}<input id=bp type=number placeholder="Price" value="${a.current_bid||""}"><button onclick="A.bid()">Update bid</button>${[500000,1000000,5000000].map(n=>`<button class=s onclick="A.inc(${n})">+${n/1000}k</button>`).join("")}</div>
@@ -64,6 +65,8 @@ const A=window.A={q(v){q=v.toLowerCase();render();const n=g("q");n.focus();n.set
  logo(k,i){const f=i.files[0];if(!f)return;const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=c.height=96;c.getContext("2d").drawImage(im,0,0,96,96);run(()=>W(sb.from("teams").update({logo:c.toDataURL("image/png")}).eq("id",k)),"Logo saved")};im.src=URL.createObjectURL(f)},
  saveContact(k){const w=g("cw_"+k).value.replace(/[\s-]/g,"");if(w&&!/^\+\d{8,15}$/.test(w))return toast("WhatsApp needs country code, e.g. +923001234567",1);
   run(()=>W(sb.from("team_contacts").upsert({team_id:k,manager:g("cm_"+k).value,email:g("ce_"+k).value.trim(),whatsapp:w,email_pref:g("cp_"+k).checked,wa_pref:g("cq_"+k).checked,wa_consent:g("cc_"+k).checked})),"Contact saved")},
+ genCodes(){run(()=>W(sb.rpc("generate_codes")).then(refresh),"Links generated")},
+ copy(u){navigator.clipboard.writeText(u);toast("Link copied")},
  load(){const id=g("ap").value;if(!id)return;run(async()=>{await W(sb.from("players").update({status:"Available"}).eq("status","Live"));await W(sb.from("players").update({status:"Live"}).eq("id",id));
   await W(sb.from("auction").update({player_id:id,state:"live",current_bid:pm(id).base_price,bid_team_id:null,timer_end:Date.now()+(Number(g("sec").value)||60)*1000}).eq("id",1))})},
  pause(){const a=S.auction;if(a.state==="live")run(()=>W(sb.from("auction").update({state:"paused",remaining_ms:Math.max(0,a.timer_end-Date.now())}).eq("id",1)))},
