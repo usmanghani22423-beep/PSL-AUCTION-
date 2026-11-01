@@ -22,4 +22,4 @@ function draw(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id)
  const sd=ps.filter(x=>x.status==="Sold"),top=[...sd].sort((x,y)=>y.sold_price-x.sold_price)[0];
  st.innerHTML=`Players: <b>${ps.length}</b><br>Sold: <b>${sd.length}</b> · Unsold: <b>${ps.filter(x=>x.status==="Unsold").length}</b><br>Highest: <b>${top?esc(top.name)+" "+fmt(top.sold_price):"—"}</b><br>Average: <b>${fmt(sd.length?sd.reduce((s,x)=>s+x.sold_price,0)/sd.length:0)}</b>`}
 setInterval(()=>{const a=S.auction[0]||{},e=document.getElementById("tmr");if(!e)return;
- const r=a.state==="live"?a.timer_end-Date.now():a.state==="paused"?a.remaining_ms:null;e.textContent=r==null?"":"⏱ "+Math.max(0,Math.ceil(r/1000))+"s"},250);</script></body></html>
+ const r=a.state==="live"?(a.timer_end==null?null:a.timer_end-Date.now()):a.state==="paused"?a.remaining_ms:null;e.textContent=r==null?"":"⏱ "+Math.max(0,Math.ceil(r/1000))+"s"},250);</script></body></html>

@@ -19,5 +19,5 @@ function draw(){if(valid===false){me.innerHTML="<b style=color:var(--r)>Invalid 
  sq.innerHTML=`<h3>My squad</h3>`+(S.players.filter(x=>x.team_id===TEAM).map(x=>`<div>${esc(x.name)} <small>${esc(x.role)}</small> · ${fmt(x.sold_price)}</div>`).join("")||"<small>No players yet</small>")}
 ctl.onclick=async e=>{const b=e.target.closest(".bb");if(!b||busy)return;busy=true;document.querySelectorAll(".bb").forEach(x=>x.disabled=true);
  const {error}=await sb.rpc("place_bid",{p_team:TEAM,p_code:CODE,p_bid:Number(b.dataset.v)});busy=false;error?toast(error.message,1):toast("Bid placed: "+fmt(b.dataset.v));draw()};
-setInterval(()=>{const a=S.auction[0]||{},e=document.getElementById("tmr");if(!e)return;const r=a.state==="live"?a.timer_end-Date.now():a.state==="paused"?a.remaining_ms:null;
- e.textContent=r==null?"":"⏱ "+Math.max(0,Math.ceil(r/1000))+"s";if(a.state==="live"&&r<=0)document.querySelectorAll(".bb").forEach(x=>x.disabled=true)},250);</script></body></html>
+setInterval(()=>{const a=S.auction[0]||{},e=document.getElementById("tmr");if(!e)return;const r=a.state==="live"?(a.timer_end==null?null:a.timer_end-Date.now()):a.state==="paused"?a.remaining_ms:null;
+ e.textContent=r==null?"":"⏱ "+Math.max(0,Math.ceil(r/1000))+"s";if(a.state==="live"&&r!=null&&r<=0)document.querySelectorAll(".bb").forEach(x=>x.disabled=true)},250);</script></body></html>
