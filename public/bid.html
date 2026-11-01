@@ -2,7 +2,7 @@
 <body><div class=top><b>🏏 PSL TEAM BIDDING</b><span><i id=c class=dot></i><small id=cs>Connecting…</small></span></div>
 <div class=wrap style="max-width:640px"><div class=card id=me>Loading…</div><div class=card id=cur style="margin-top:12px"></div><div class=card id=ctl style="margin-top:12px"></div><div class=card id=sq style="margin-top:12px"></div></div>
 <div id=toast></div>
-<script type=module>import {sb,fmt,esc,ph,loadAll,sync} from "./lib.js";
+<script type=module>import {sb,fmt,esc,ph,loadAll,sync,squad} from "./lib.js";
 const u=new URLSearchParams(location.search),TEAM=u.get("team"),CODE=u.get("code");let S={players:[],teams:[],auction:[]},valid=null,busy=false;
 const toast=(m,b)=>{const t=document.getElementById("toast");t.textContent=m;t.className="show"+(b?" bad":"");setTimeout(()=>t.className="",4000)};
 (async()=>{const {data}=await sb.rpc("check_team",{p_team:TEAM||"",p_code:CODE||""});valid=!!data;draw()})();
@@ -10,13 +10,13 @@ sync(["players","teams","auction"],o=>{Object.assign(S,o);draw()},ok=>{c.classNa
 const tn=id=>S.teams.find(t=>t.id===id)?.name||"—";
 function draw(){if(valid===false){me.innerHTML="<b style=color:var(--r)>Invalid or expired link.</b> Ask the admin for your team's bidding link.";cur.innerHTML=ctl.innerHTML=sq.innerHTML="";return}
  const t=S.teams.find(x=>x.id===TEAM);if(!t||valid===null)return;const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),mine=a.bid_team_id===TEAM,live=a.state==="live"&&p;
- me.innerHTML=`<h3>${esc(t.name)}</h3><small>Remaining purse</small> <b style="color:var(--gold)">${fmt(t.purse-t.spent)}</b> · Squad ${t.squad_count}/${t.max_squad}`;
+ me.innerHTML=`<h3>${esc(t.name)}</h3><div class=row style="gap:18px"><div><small>Total purse</small><br><b>${fmt(t.purse)}</b></div><div><small>Spent</small><br><b>${fmt(t.spent)}</b></div><div><small>Remaining</small><br><b style="color:var(--gold)">${fmt(t.purse-t.spent)}</b></div><div><small>Squad</small><br><b>${t.squad_count}/${t.max_squad}</b></div></div>`;
  cur.innerHTML=p?`<div class=hero><img style="width:110px;height:110px" src="${esc(p.image||ph)}" onerror="this.src='${ph}'"><div><h2>${esc(p.name)}</h2><small>${esc(p.country)} · ${esc(p.role)} · Base ${fmt(p.base_price)}</small><div class=price>${fmt(a.current_bid)}</div>
   <div>Highest: <b>${a.bid_team_id?esc(tn(a.bid_team_id)):"no bid yet"}</b>${mine?" (you)":""}</div><h2 id=tmr style="color:var(--gold)"></h2>
   ${a.state==="sold"?`<h2 style="color:var(--g)">SOLD to ${esc(tn(a.bid_team_id))}</h2>`:a.state==="unsold"?'<h2 style="color:var(--r)">UNSOLD</h2>':a.state==="paused"?"<h3>⏸ Paused</h3>":""}</div></div>`:"Waiting for next player…";
  const opts=live?[...(a.bid_team_id?[]:[a.current_bid]),...[500000,1000000,5000000].map(s=>a.current_bid+s)]:[];
  ctl.innerHTML=live?`<div class=row>${opts.map(v=>`<button class=bb data-v=${v} style="flex:1;min-width:140px;padding:14px" ${mine?"disabled":""}>Bid ${fmt(v)}</button>`).join("")}</div>${mine?"<small>You hold the highest bid.</small>":""}`:"<small>Bidding opens when the admin starts a player.</small>";
- sq.innerHTML=`<h3>My squad</h3>`+(S.players.filter(x=>x.team_id===TEAM).map(x=>`<div>${esc(x.name)} <small>${esc(x.role)}</small> · ${fmt(x.sold_price)}</div>`).join("")||"<small>No players yet</small>")}
+ sq.innerHTML=((mp)=>`<h3>My squad (${mp.length}/${t.max_squad})</h3>`+squad(mp))(S.players.filter(x=>x.team_id===TEAM&&x.status==="Sold"))}
 ctl.onclick=async e=>{const b=e.target.closest(".bb");if(!b||busy)return;busy=true;document.querySelectorAll(".bb").forEach(x=>x.disabled=true);
  const {error}=await sb.rpc("place_bid",{p_team:TEAM,p_code:CODE,p_bid:Number(b.dataset.v)});busy=false;error?toast(error.message,1):toast("Bid placed: "+fmt(b.dataset.v));draw()};
 setInterval(()=>{const a=S.auction[0]||{},e=document.getElementById("tmr");if(!e)return;const r=a.state==="live"?(a.timer_end==null?null:a.timer_end-Date.now()):a.state==="paused"?a.remaining_ms:null;

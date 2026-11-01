@@ -18,3 +18,8 @@ export function sync(tables,apply,st){const store={};let tm;const sched=()=>{cle
   else{const i=rows.findIndex(r=>r[k]===p.new[k]);i>=0?rows[i]=p.new:rows.push(p.new)}sched()}));
  ch.subscribe(x=>{const ok=x==="SUBSCRIBED";st&&st(ok);if(ok)full().catch(e=>console.error(e))});
  return {ch,set(t,rows){store[t]=rows;sched()}}}
+
+export const foreign=p=>{const c=String(p.country||"").trim().toLowerCase();return !!c&&c!=="pakistan"};
+export const cat=p=>{const r=String(p.role||"").toLowerCase();return /keeper|wk/.test(r)?"Wicketkeeper":/all/.test(r)?"All-rounder":/bowl/.test(r)?"Bowler":/bat/.test(r)?"Batter":"Other"};
+export const CATS=["Batter","Wicketkeeper","All-rounder","Bowler","Other"];
+export function squad(list){return CATS.map(c=>{const ps=list.filter(p=>cat(p)===c);return ps.length?`<div style="margin:8px 0"><small>${c} (${ps.length})</small>${ps.map(p=>`<div>${esc(p.name)}${foreign(p)?" ✈️":""} ${p.acq?`<span class=badge>${esc(p.acq)}</span>`:""} <small>${p.sold_price?fmt(p.sold_price):""}</small></div>`).join("")}</div>`:""}).join("")||"<small>No players yet</small>"}
