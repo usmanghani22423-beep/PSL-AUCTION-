@@ -24,3 +24,4 @@ details{border-bottom:1px solid #22306a;padding:6px 0}summary{cursor:pointer;pad
 @media(max-width:800px){.wrap{padding:10px}main{padding:10px}.hero{flex-direction:column;text-align:center}.hero img{width:130px;height:130px}.price{font-size:2em}.top{padding:10px 12px}.top b{font-size:.85em}button,select,input,a.btn{min-height:42px}.cards{grid-template-columns:repeat(2,1fr)}th,td{padding:6px 4px}}
 @media print{.top,nav,button,#toast,a.btn{display:none!important}body{background:#fff;color:#000}.card{background:#fff;color:#000;border:1px solid #999}small,th{color:#444}.badge{background:#ddd;color:#000}}
 .call{color:var(--r);animation:pulse .6s infinite alternate;margin:.2em 0}@keyframes pulse{to{transform:scale(1.07)}}#ann{display:none;background:var(--gold);color:#000;font-weight:700;text-align:center;padding:10px}
+@media(max-width:800px){.rb{padding:4px 10px}}
