@@ -1,0 +1,7 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=style.css><title>Team – PSL 2027 Mock Auction</title></head>
+<body><div id=nav-root></div><div class=wrap><div class=chips id=chips></div><div id=dash>Loading…</div></div><div id=foot-root></div>
+<script type=module>import {sync,mountNav,mountFooter,teamDash,themeStyle,esc,teamLogo} from "./lib.js";mountNav("teams.html");mountFooter();
+const id=new URLSearchParams(location.search).get("team"),put=(e,h)=>{if(e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}};let S={players:[],teams:[],rules:[]};
+sync(["players","teams","rules"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+function draw(){const t=S.teams.find(x=>x.id===id)||S.teams[0];if(!t)return;document.body.className="teampage";document.body.style.cssText=themeStyle(t);document.title=t.name+" – PSL 2027 Mock Auction";
+ put(chips,S.teams.map(x=>`<a class=chip href="team.html?team=${esc(x.id)}" style="${themeStyle(x)};${x.id===t.id?"background:var(--tp);color:var(--tpt)":""}">${esc(x.name)}</a>`).join(""));put(dash,teamDash(t,S.players,S.rules))}</script></body></html>

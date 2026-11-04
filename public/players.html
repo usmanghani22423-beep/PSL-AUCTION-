@@ -1,0 +1,12 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=style.css><title>Players – PSL 2027 Mock Auction</title></head>
+<body><div id=nav-root></div><div class=wrap><h1>Players</h1>
+<div class=row><input id=q placeholder="Search name or country…" style="flex:1;min-width:180px"><select id=st><option value="">All status</option><option>Available</option><option>Upcoming</option><option>Live</option><option>Sold</option><option>Unsold</option></select>
+<select id=rl><option value="">All roles</option><option>Batter</option><option>Wicketkeeper</option><option>All-rounder</option><option>Bowler</option></select>
+<select id=co><option value="">All countries</option><option value=pk>Pakistani</option><option value=fo>Foreign ✈️</option></select><select id=tm><option value="">All teams</option></select></div>
+<p><small id=cnt></small></p><div class=pcg id=pg></div><div class=row style="justify-content:center"><button id=more class=s>Show more</button></div></div><div id=foot-root></div>
+<script type=module>import {esc,sync,mountNav,mountFooter,playerCard,foreign,cat} from "./lib.js";mountNav("players.html");mountFooter();
+const put=(e,h)=>{if(e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}};let S={players:[],teams:[]},lim=48,built=false;
+sync(["players","teams"],o=>{Object.assign(S,o);if(!built&&S.teams.length){tm.innerHTML+=S.teams.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("");built=true}draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+for(const e of [q,st,rl,co,tm])e.oninput=()=>{lim=48;draw()};more.onclick=()=>{lim+=48;draw()};
+function draw(){const s=q.value.toLowerCase(),f=S.players.filter(p=>(!s||(p.name+" "+p.country).toLowerCase().includes(s))&&(!st.value||p.status===st.value)&&(!rl.value||cat(p)===rl.value)&&(!co.value||(co.value==="fo")===foreign(p))&&(!tm.value||p.team_id===tm.value)).sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true}));
+ cnt.textContent=f.length+" players";put(pg,f.slice(0,lim).map(p=>playerCard(p,S.teams.find(t=>t.id===p.team_id))).join("")||"<small>No players match</small>");more.style.display=f.length>lim?"":"none"}</script></body></html>
