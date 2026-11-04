@@ -1,0 +1,5 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=style.css><title>Teams – PSL 2027 Mock Auction</title></head>
+<body><div id=nav-root></div><div class=wrap><h1>Teams</h1><div class=tcg id=tg>Loading…</div></div><div id=foot-root></div>
+<script type=module>import {sync,mountNav,mountFooter,teamCard} from "./lib.js";mountNav("teams.html");mountFooter();
+const put=(e,h)=>{if(e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}};
+sync(["teams"],o=>put(tg,o.teams.map(teamCard).join("")),ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});</script></body></html>

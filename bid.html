@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>PSL Team Bidding</title><link rel=stylesheet href=style.css></head>
+<body><div id=nav-root></div>
+<div id=ann></div><div class=wrap style="max-width:900px"><div class=card id=me>Loading…</div><div class=card id=cur style="margin-top:12px"></div><div class=card id=ctl style="margin-top:12px"></div><div class=card id=cust style="margin-top:12px;display:none"><b>Bid your own amount</b><div class=row><input id=bidamt type=number step=any min=0 placeholder="Amount" style="flex:1;min-width:120px"><select id=bidunit><option value=10000000>Crore</option><option value=100000>Lakh</option><option value=1>Rs.</option></select><button id=bidgo>Place bid</button></div><small id=bidprev></small><br><small id=bidmin></small></div><div class=card id=sq style="margin-top:12px"></div><div class=card id=wlc style="margin-top:12px"><h3>⭐ My wishlist</h3><small>Saved on this phone only.</small><div class=row><input id=wlin list=wlopts placeholder="Type player name…" style="flex:1;min-width:150px"><datalist id=wlopts></datalist><button id=wlad>Add</button></div><div id=wl></div></div></div>
+<div id=foot-root></div><div id=toast></div>
+<script type=module>import {sb,fmt,esc,ph,loadAll,sync,squad,stepFor,balance,mountNav,mountFooter,teamLogo,themeStyle,teamDash} from "./lib.js";
+mountNav("");mountFooter();
+const u=new URLSearchParams(location.search),TEAM=u.get("team"),CODE=u.get("code");let S={players:[],teams:[],auction:[],bid_rules:[],announcement:[],rules:[]},valid=null,busy=false;
+const toast=(m,b)=>{const t=document.getElementById("toast");t.textContent=m;t.className="show"+(b?" bad":"");setTimeout(()=>t.className="",4000)};
+(async()=>{const {data}=await sb.rpc("check_team",{p_team:TEAM||"",p_code:CODE||""});valid=!!data;draw()})();
+sync(["players","teams","auction","bid_rules","announcement","rules"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+let prevMine=false,lastCall=null,ac=null,WL=[];const WK="wl_"+TEAM;try{WL=JSON.parse(localStorage.getItem(WK)||"[]")}catch(e){}
+const put=(e,h)=>{if(e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}};
+document.addEventListener("click",()=>{ac=ac||new(window.AudioContext||window.webkitAudioContext)()},{once:true});
+const beep=()=>{if(!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=520;g.gain.value=.2;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.4)};
+const tn=id=>S.teams.find(t=>t.id===id)?.name||"—";
+function draw(){if(valid===false){me.innerHTML="<b style=color:var(--r)>Invalid or expired link.</b> Ask the admin for your team's bidding link.";cur.innerHTML=ctl.innerHTML=sq.innerHTML="";return}
+ const t=S.teams.find(x=>x.id===TEAM);if(!t||valid===null)return;const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),mine=a.bid_team_id===TEAM,live=a.state==="live"&&p;
+ document.body.className="teampage";document.body.style.cssText=themeStyle(t);const an=S.announcement[0]?.text||"";ann.style.display=an?"block":"none";ann.textContent="📢 "+an;if(a.callout&&a.callout!==lastCall&&a.state==="live")beep();lastCall=a.callout;
+ if(prevMine&&a.state==="live"&&a.bid_team_id&&!mine){toast("⚠ Outbid by "+tn(a.bid_team_id)+" – "+fmt(a.current_bid),1);navigator.vibrate?.([200,100,200]);beep()}prevMine=mine;
+ me.innerHTML=`<div class=row style="gap:14px">${teamLogo(t,56)}<div><h3 style="margin:0">${esc(t.name)}</h3><small>Remaining purse</small> <b style="color:var(--gold)">${fmt(t.purse-t.spent)}</b> · Squad ${t.squad_count}/${t.max_squad}</div></div>`;
+ cur.innerHTML=p?`<div class=hero><img style="width:110px;height:110px" src="${esc(p.image||ph)}" onerror="this.src='${ph}'"><div><h2>${esc(p.name)} ${WL.includes(p.id)?"⭐":""}</h2><small>${esc(p.country)} · ${esc(p.role)} · Base ${fmt(p.base_price)}</small><div class=price>${fmt(a.current_bid)}</div>
+  <div>Highest: <b>${a.bid_team_id?esc(tn(a.bid_team_id)):"no bid yet"}</b>${mine?" (you)":""}</div><h2 id=tmr style="color:var(--gold)"></h2>${a.state==="live"&&a.callout?`<h1 class=call>GOING ${esc(a.callout.toUpperCase())}…</h1>`:""}
+  ${a.state==="sold"?`<h2 style="color:var(--g)">SOLD to ${esc(tn(a.bid_team_id))}</h2>`:a.state==="unsold"?'<h2 style="color:var(--r)">UNSOLD</h2>':a.state==="paused"?"<h3>⏸ Paused</h3>":""}</div></div>`:"Waiting for next player…";
+ const st=stepFor(S.bid_rules,a.current_bid||0),mn=a.bid_team_id?a.current_bid+st:a.current_bid,opts=live?[0,1,3].map(k=>mn+k*st):[];
+ ctl.innerHTML=live?`<div class=row>${opts.map(v=>`<button class=bb data-v=${v} style="flex:1;min-width:140px;padding:14px" ${mine?"disabled":""}>Bid ${fmt(v)}</button>`).join("")}</div>${mine?"<small>You hold the highest bid.</small>":""}`:"<small>Bidding opens when the admin starts a player.</small>";
+ put(sq,teamDash(t,S.players,S.rules));wdraw();cust.style.display=live?"block":"none";bidgo.disabled=mine;bidmin.textContent=live?"Minimum bid: "+fmt(mn)+" (raise of "+fmt(st)+")":""}
+const cv=()=>Math.round(Number(bidamt.value)*Number(bidunit.value));
+bidamt.oninput=bidunit.onchange=()=>{bidprev.textContent=cv()>0?"= "+fmt(cv()):""};
+bidgo.onclick=async()=>{const v=cv();if(!(v>0))return toast("Enter an amount",1);if(busy||!confirm("Place bid of "+fmt(v)+"?"))return;busy=true;bidgo.disabled=true;
+ const {error}=await sb.rpc("place_bid",{p_team:TEAM,p_code:CODE,p_bid:v});busy=false;error?toast(error.message,1):(toast("Bid placed: "+fmt(v)),bidamt.value="",bidprev.textContent="");draw()};
+function wdraw(){const m=id=>S.players.find(p=>p.id===id);put(wl,WL.map(m).filter(Boolean).map(p=>`<div>⭐ ${esc(p.name)} <small>${esc(p.role)} · ${fmt(p.base_price)} · ${esc(p.status)}</small> <button class=s data-rm="${esc(p.id)}" style="padding:2px 8px;min-height:0">✕</button></div>`).join("")||"<small>Empty</small>");
+ put(wlopts,S.players.filter(p=>p.status!=="Sold"&&!WL.includes(p.id)).map(p=>`<option value="${esc(p.name+" · "+p.id)}">`).join(""))}
+wlad.onclick=()=>{const p=S.players.find(x=>x.name+" · "+x.id===wlin.value);if(!p)return toast("Pick a player from the list",1);if(!WL.includes(p.id)){WL.push(p.id);try{localStorage.setItem(WK,JSON.stringify(WL))}catch(e){}}wlin.value="";wdraw()};
+wl.onclick=e=>{const id=e.target.dataset?.rm;if(id){WL=WL.filter(x=>x!==id);try{localStorage.setItem(WK,JSON.stringify(WL))}catch(e){}wdraw()}};
+ctl.onclick=async e=>{const b=e.target.closest(".bb");if(!b||busy)return;busy=true;document.querySelectorAll(".bb").forEach(x=>x.disabled=true);
+ const {error}=await sb.rpc("place_bid",{p_team:TEAM,p_code:CODE,p_bid:Number(b.dataset.v)});busy=false;error?toast(error.message,1):toast("Bid placed: "+fmt(b.dataset.v));draw()};
+setInterval(()=>{const a=S.auction[0]||{},e=document.getElementById("tmr");if(!e)return;const r=a.state==="live"?(a.timer_end==null?null:a.timer_end-Date.now()):a.state==="paused"?a.remaining_ms:null;
+ e.textContent=r==null?"":"⏱ "+Math.max(0,Math.ceil(r/1000))+"s";if(a.state==="live"&&r!=null&&r<=0)document.querySelectorAll(".bb").forEach(x=>x.disabled=true)},250);</script></body></html>

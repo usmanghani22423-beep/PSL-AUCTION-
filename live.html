@@ -1,0 +1,73 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>PSL 2027 Mock Auction – Live</title><link rel=stylesheet href=style.css>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>.stage{display:grid;grid-template-columns:260px 1fr;gap:22px;align-items:center}.stage img{width:100%;max-width:260px;aspect-ratio:1;object-fit:cover;border-radius:18px;border:4px solid var(--gold)}
+.big{font-size:3.4em;font-weight:900;color:var(--gold);line-height:1.1}.hb{font-size:1.4em;margin:4px 0}.bar{height:8px;background:#30424E;border-radius:9px;overflow:hidden;margin:3px 0}.bar i{display:block;height:100%;background:var(--g)}
+.tick div{padding:7px 0;border-bottom:1px solid #30424E}.tick div:first-child{font-size:1.1em;color:var(--gold)}
+#rx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:5}.fl{position:absolute;bottom:-40px;font-size:2.4em;animation:up 3s ease-out forwards}@keyframes up{to{transform:translateY(-85vh);opacity:0}}
+.rb{font-size:1.6em;padding:4px 14px;background:#17232D}
+@media(max-width:800px){.stage{grid-template-columns:1fr;text-align:center}.stage img{margin:auto;max-width:200px}.big{font-size:2.5em}}</style></head>
+<body class=live><div id=nav-root></div>
+<div id=ann></div><div id=rx></div>
+<div id=sold><div style="max-width:760px;width:100%"><h1 class=soldh>SOLD!</h1><div id=scw></div><h2 id=rb style="color:var(--gold)"></h2></div></div>
+<div class=wrap><div class=card id=cur>Waiting for auction…</div>
+<div class=card style="margin-top:12px"><div class=row id=rxb style="justify-content:center"><button class=s id=snd style="padding:4px 10px;min-height:0">🔕 Sound off</button><small>React:</small><button class=rb data-e="🔥">🔥</button><button class=rb data-e="👏">👏</button><button class=rb data-e="😮">😮</button><button class=rb data-e="😂">😂</button><button class=rb data-e="🎉">🎉</button></div></div><div class=card style="margin-top:12px" id=prog></div>
+<div class=grid style="margin-top:16px"><div><div class=card><h3>Live bids</h3><div class=tick id=tk></div></div><div class=card style="margin-top:16px"><h3>🎙 Commentary</h3><div id=cm></div></div><div class=card style="margin-top:16px"><h3>Recently sold</h3><div class=tw id=rec></div></div><div class=card style="margin-top:16px"><h3>Upcoming</h3><div id=up></div></div></div>
+<div><div class=card><h3>🔮 Predict the buyer</h3><div id=pr></div></div><div class=card style="margin-top:16px"><h3>Team purses</h3><div id=tm></div></div><div class=card style="margin-top:16px"><h3>Top buys</h3><div id=top></div></div><div class=card style="margin-top:16px"><h3>Statistics</h3><div id=st></div></div></div></div>
+<div class=card style="margin-top:16px"><h3>Team squads</h3><div id=sqb></div></div>
+<p><a href=awards.html>🏅 Awards & stats</a></p></div><div id=foot-root></div>
+<script type=module>import {sb,fmt,esc,ph,loadAll,sync,squad,foreign,balance,mountNav,mountFooter,teamLogo,themeStyle,themeOf,soldCard} from "./lib.js";
+mountNav("live.html");mountFooter();
+let S={players:[],teams:[],auction:[],history:[],bids:[],announcement:[],rules:[]},last=null,lastBid="",lastCall=null,lastPid=null,ac=null,on=false,counts=[],board=[];
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
+const VID=ls("pv")||(()=>{const v=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());ls("pv",v);return v})();
+let qrSvg="";try{const q=qrcode(0,"M");q.addData(location.origin+"/live.html");q.make();qrSvg=q.createSvgTag(5)}catch(e){}
+const put=(e,h)=>{if(e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}},tn=id=>S.teams.find(t=>t.id===id)?.name||"—";
+snd.onclick=()=>{on=!on;snd.textContent=on?"🔔 Sound on":"🔕 Sound off";if(on&&!ac)ac=new(window.AudioContext||window.webkitAudioContext)()};
+const beep=(f,d=.15)=>{if(!on||!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=.15;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)};
+// reactions (broadcast, nothing stored)
+const fl=e=>{const s=document.createElement("span");s.textContent=e;s.className="fl";s.style.left=(5+Math.random()*90)+"%";rx.appendChild(s);setTimeout(()=>s.remove(),3200)};
+const rch=sb.channel("reactions").on("broadcast",{event:"r"},p=>fl(p.payload.e)).subscribe();let rt=0;
+rxb.onclick=e=>{const b=e.target.closest("[data-e]");if(!b||Date.now()-rt<1500)return;rt=Date.now();fl(b.dataset.e);rch.send({type:"broadcast",event:"r",payload:{e:b.dataset.e}})};
+// predictions
+async function pull2(){try{const a=S.auction[0];if(a?.player_id)counts=(await sb.from("prediction_counts").select("*").eq("player_id",a.player_id)).data||[];
+ board=(await sb.from("prediction_board").select("*").order("correct",{ascending:false}).limit(5)).data||[];drawPred()}catch(e){}}
+setInterval(pull2,5000);
+function drawPred(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),tot=counts.reduce((s,c)=>s+c.n,0);let h="";
+ if(p&&a.state==="live"){const mine=ls("pk_"+p.id);h=`<small>Who will buy ${esc(p.name)}?</small>`+S.teams.map(t=>{const n=counts.find(c=>c.team_id===t.id)?.n||0;return `<div><button class="${mine===t.id?"":"s"}" data-t="${t.id}" style="margin:2px 0;width:100%;text-align:left">${mine===t.id?"✅ ":""}${esc(t.name)} <small>${tot?Math.round(n*100/tot):0}%</small></button></div>`}).join("")}
+ else if(p&&a.state==="sold"){const ok=counts.find(c=>c.team_id===a.bid_team_id)?.n||0;h=tot?`<b>${Math.round(ok*100/tot)}%</b> of ${tot} predictors got it right 🎯`:"<small>No predictions for this player</small>"}
+ else h="<small>Predictions open when a player goes live.</small>";
+ put(pr,h+`<hr style="border-color:#30424E"><b>Top predictors</b>`+(board.map((b,i)=>`<div>${i+1}. ${esc(b.name)} — ${b.correct}/${b.total}</div>`).join("")||"<div><small>No votes yet</small></div>"))}
+pr.onclick=async e=>{const b=e.target.closest("[data-t]"),a=S.auction[0]||{};if(!b||a.state!=="live")return;let n=ls("pn");if(!n){n=prompt("Your name for the predictor leaderboard")||"Guest";ls("pn",n)}
+ const {error}=await sb.rpc("predict",{p_player:a.player_id,p_team:b.dataset.t,p_voter:VID,p_name:n});if(error)return alert(error.message);ls("pk_"+a.player_id,b.dataset.t);pull2()};
+const openT=new Set();sqb.addEventListener("toggle",e=>{const t=e.target.dataset?.t;if(t)e.target.open?openT.add(t):openT.delete(t)},true);
+sync(["players","teams","auction","history","bids","announcement","rules"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+function draw(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),ps=S.players,hist=[...S.history].sort((x,y)=>new Date(y.at)-new Date(x.at)).slice(0,20),idle=!p||!a.state||a.state==="idle";
+ const asc=S.bids.filter(b=>b.player_id===a.player_id).sort((x,y)=>new Date(x.at)-new Date(y.at)),lt=asc.slice(-4).map(b=>b.team_id),war=a.state==="live"&&lt.length===4&&new Set(lt).size===2&&lt.every((t,i)=>i===0||t!==lt[i-1]);
+ const record=Math.max(0,...S.history.filter(h=>h.status==="Sold"&&h.player_id!==a.player_id).map(h=>h.price||0));
+ put(cur,idle?`<div style="text-align:center"><h2>Auction starts soon</h2><div class=big id=cd></div><div style="margin:12px auto;width:170px;background:#fff;padding:8px;border-radius:10px">${qrSvg}</div><small>Scan to open this page on your phone</small></div>`:
+  `<div class=stage><img src="${esc(p.image||ph)}" onerror="this.src='${ph}'"><div><span class="badge ${esc(p.status)}">${esc(p.status)}</span> ${foreign(p)?"✈️":""}<h1 style="margin:.2em 0">${esc(p.name)}</h1><div>${esc(p.country)} · ${esc(p.role)}</div><small>${esc(p.bat)} ${p.bowl?"· "+esc(p.bowl):""} · Base ${fmt(p.base_price)}</small>
+  <div class=big>${fmt(a.current_bid||p.base_price)}</div>${a.state==="live"&&record>0&&a.current_bid>record?'<div style="color:var(--gold)">💥 New record price!</div>':""}${a.bid_team_id?`<div class=hb style="${themeStyle(S.teams.find(x=>x.id===a.bid_team_id))};display:inline-flex;align-items:center;gap:8px;background:var(--tp);color:var(--tpt);padding:4px 14px;border-radius:8px">${teamLogo(S.teams.find(x=>x.id===a.bid_team_id),30)} ${esc(tn(a.bid_team_id))}</div>`:'<div class=hb>Waiting for first bid</div>'}
+  ${war?`<div class=call style="font-size:1.2em">🔥 BIDDING WAR: ${esc(tn(lt[3]))} vs ${esc(tn(lt[2]))}</div>`:""}<h2 id=tmr style="color:var(--gold)"></h2>${a.state==="live"&&a.callout?`<h1 class=call>GOING ${esc(a.callout.toUpperCase())}…</h1>`:""}
+  ${a.state==="sold"?`<h2 style="color:var(--g)">SOLD to ${esc(tn(a.bid_team_id))}</h2>`:a.state==="unsold"?'<h2 style="color:var(--r)">UNSOLD</h2>':a.state==="paused"?"<h3>⏸ Paused</h3>":""}</div></div>`);
+ const an=S.announcement[0]?.text||"";ann.style.display=an?"block":"none";ann.textContent="📢 "+an;if(a.callout&&a.callout!==lastCall&&a.state==="live")beep(440,.35);lastCall=a.callout;
+ const key=a.player_id+"|"+a.current_bid;if(lastBid&&key!==lastBid&&a.state==="live")beep(660);lastBid=key;
+ if(a.player_id!==lastPid){lastPid=a.player_id;counts=[];pull2()}
+ if(last===null)last=a.state==="sold"?a.player_id:"";
+ else if(a.state==="sold"&&a.player_id!==last&&p){last=a.player_id;const t=S.teams.find(x=>x.id===a.bid_team_id);rb.textContent=record>0&&a.current_bid>record?"💥 RECORD BUY!":"";scw.innerHTML=soldCard({...p,sold_price:a.current_bid},t,{bids:asc.length});sold.className="show";beep(880,.2);setTimeout(()=>beep(1100,.3),220);setTimeout(()=>sold.className="",7000)}
+ put(tk,asc.slice(-8).reverse().map(b=>`<div>${esc(tn(b.team_id))} — <b>${fmt(b.amount)}</b> <small>${new Date(b.at).toLocaleTimeString()}</small></div>`).join("")||"<small>No bids yet</small>");
+ const lines=asc.map((b,i)=>{const t=tn(b.team_id),pv=asc[i-1],pv2=asc[i-2];return !pv?`${t} opens the bidding at ${fmt(b.amount)}`:b.amount>=pv.amount*1.15?`${t} makes a statement bid – ${fmt(b.amount)}!`:pv2&&pv2.team_id===b.team_id?`${t} hits back with ${fmt(b.amount)}`:`${t} jumps in at ${fmt(b.amount)}`});
+ if(a.state==="sold"&&p)lines.push(`🔨 SOLD! ${p.name} goes to ${tn(a.bid_team_id)} for ${fmt(a.current_bid)}`);
+ put(cm,lines.slice(-6).reverse().map(l=>`<div>${esc(l)}</div>`).join("")||"<small>Waiting for action…</small>");
+ put(rec,`<table><tr><th>Player</th><th>Team</th><th>Price</th></tr>${hist.map(h=>`<tr><td>${esc(h.name)}</td><td>${esc(h.team||"—")}</td><td>${h.status==="Unsold"?"UNSOLD":fmt(h.price)+(h.status!=="Sold"?" ("+esc(h.status)+")":"")}</td></tr>`).join("")||"<tr><td colspan=3>None yet</td></tr>"}</table>`);
+ put(up,ps.filter(x=>["Upcoming","Available"].includes(x.status)).sort((a,b)=>(a.queue??1e9)-(b.queue??1e9)).slice(0,12).map(x=>`<span class=badge style="margin:2px;display:inline-block">${esc(x.name)}</span>`).join("")||"—");
+ put(tm,S.teams.map(t=>`<div style="margin-bottom:10px">${teamLogo(t,28)}<b style="border-left:4px solid ${themeOf(t).p};padding-left:6px">${esc(t.name)}</b> <small>${t.squad_count}/${t.max_squad}</small><div class=bar><i style="width:${Math.max(0,Math.min(100,100-t.spent/t.purse*100))}%;background:${themeOf(t).p}"></i></div><small>Left ${fmt(t.purse-t.spent)} of ${fmt(t.purse)}</small></div>`).join(""));
+ const sd=ps.filter(x=>x.status==="Sold"&&!x.acq),top=[...sd].sort((x,y)=>y.sold_price-x.sold_price);
+ put(document.getElementById("top"),top.slice(0,5).map((x,i)=>`<div>${i+1}. ${esc(x.name)}${foreign(x)?" ✈️":""} <small>${esc(tn(x.team_id))}</small> — <b>${fmt(x.sold_price)}</b></div>`).join("")||"<small>No sales yet</small>");
+ put(st,`Players: <b>${ps.length}</b><br>Sold: <b>${sd.length}</b> · Unsold: <b>${ps.filter(x=>x.status==="Unsold").length}</b><br>Average: <b>${fmt(sd.length?sd.reduce((s,x)=>s+x.sold_price,0)/sd.length:0)}</b>`);
+ put(sqb,S.teams.map(t=>{const q=ps.filter(p=>p.team_id===t.id&&p.status==="Sold");return `<details data-t="${t.id}" ${openT.has(t.id)?"open":""}><summary>${teamLogo(t,22)} <b>${esc(t.name)}</b> <small>${q.length}/${t.max_squad} players · left ${fmt(t.purse-t.spent)}</small></summary>${balance(q,S.rules)}${squad(q)}</details>`}).join(""));
+ const real=ps.filter(x=>!x.acq),done=real.filter(x=>x.status==="Sold"||x.status==="Unsold").length,nx=ps.filter(x=>["Available","Upcoming"].includes(x.status)&&x.id!==a.player_id).sort((u,v)=>(u.queue??1e9)-(v.queue??1e9)||u.id.localeCompare(v.id,undefined,{numeric:true}))[0];
+ put(prog,`<div class=row style="justify-content:space-between"><b>Auction progress</b><small>${done} of ${real.length} players auctioned</small></div><div class=prog><i style="width:${real.length?Math.round(done*100/real.length):0}%"></i></div>${nx?`<div style="margin-top:10px"><small>Next up</small> <b>${esc(nx.name)}</b> <small>${esc(nx.role||"")} · ${esc(nx.country||"")}${foreign(nx)?" ✈️":""} · Base ${fmt(nx.base_price)}</small></div>`:""}`);
+ drawPred()}
+setInterval(()=>{const a=S.auction[0]||{},e=document.getElementById("tmr"),cd=document.getElementById("cd");
+ if(cd){const s=S.announcement[0]?.starts_at,r=s?new Date(s)-Date.now():null;cd.textContent=r==null?"":r>0?`${Math.floor(r/3600000)}h ${Math.floor(r%3600000/60000)}m ${Math.floor(r%60000/1000)}s`:"Starting now…"}
+ if(!e)return;const r=a.state==="live"?(a.timer_end==null?null:a.timer_end-Date.now()):a.state==="paused"?a.remaining_ms:null;e.textContent=r==null?"":"⏱ "+Math.max(0,Math.ceil(r/1000))+"s"},250);</script></body></html>

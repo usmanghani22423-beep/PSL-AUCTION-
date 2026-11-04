@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>PSL 2027 Mock Auction – Awards</title><link rel=stylesheet href=style.css>
+<style>.aw{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.aw .card{text-align:center}.aw h2{margin:.2em 0;color:var(--gold)}.aw small{display:block}</style></head>
+<body><div id=nav-root></div>
+<div class=wrap><div class=row><h1 style="margin-right:auto">🏅 Awards</h1><button class=s onclick="window.print()">Print / PDF</button></div><div class=aw id=aw>Loading…</div><p><small>Mock auction for entertainment. Awards use auction purchases only (retentions and direct signings are excluded).</small></p></div>
+<div id=foot-root></div><script type=module>import {sb,fmt,esc,foreign,loadAll,mountNav,mountFooter} from "./lib.js";mountNav("stats.html");mountFooter();
+async function go(){try{const o=await loadAll(["players","teams","bids"]),board=(await sb.from("prediction_board").select("*").order("correct",{ascending:false}).limit(1)).data||[];
+ const sold=o.players.filter(p=>p.status==="Sold"&&!p.acq&&p.sold_price),tn=id=>o.teams.find(t=>t.id===id)?.name||"—",cnt={};o.bids.forEach(b=>cnt[b.player_id]=(cnt[b.player_id]||0)+1);
+ const by=(arr,f)=>[...arr].sort((a,b)=>f(b)-f(a))[0],ratio=p=>p.sold_price/p.base_price,card=(ic,t,h,s)=>`<div class=card><div style="font-size:2.4em">${ic}</div><b>${t}</b><h2>${h}</h2><small>${s}</small></div>`;
+ const A=[];if(sold.length){const m=by(sold,p=>p.sold_price);A.push(card("💰","Most expensive buy",esc(m.name),`${fmt(m.sold_price)} · ${esc(tn(m.team_id))}`));
+  const pr=by(sold,ratio);A.push(card("📈","Biggest premium over base",esc(pr.name),`${ratio(pr).toFixed(1)}× base (${fmt(pr.base_price)} → ${fmt(pr.sold_price)}) · ${esc(tn(pr.team_id))}`));
+  const st=[...sold].sort((a,b)=>ratio(a)-ratio(b)||b.base_price-a.base_price)[0];A.push(card("🧲","Steal of the auction",esc(st.name),`${fmt(st.sold_price)} (base ${fmt(st.base_price)}) · ${esc(tn(st.team_id))}`));
+  const w=by(sold,p=>cnt[p.id]||0);if(cnt[w.id])A.push(card("🔥","Biggest bidding war",esc(w.name),`${cnt[w.id]} bids · ${esc(tn(w.team_id))}`))}
+ const sp=by(o.teams,t=>t.spent);if(sp&&sp.spent)A.push(card("🏆","Biggest spender",esc(sp.name),`${fmt(sp.spent)} spent · ${fmt(sp.purse-sp.spent)} left`));
+ const sv=[...o.teams].filter(t=>t.squad_count).sort((a,b)=>a.spent/a.squad_count-b.spent/b.squad_count)[0];if(sv&&sp&&sp.spent)A.push(card("🧠","Most economical squad",esc(sv.name),`${fmt(Math.round(sv.spent/sv.squad_count))} per player on average`));
+ const fo=by(o.teams,t=>o.players.filter(p=>p.team_id===t.id&&p.status==="Sold"&&foreign(p)).length),fc=fo?o.players.filter(p=>p.team_id===fo.id&&p.status==="Sold"&&foreign(p)).length:0;if(fc)A.push(card("✈️","Most foreign players",esc(fo.name),`${fc} overseas players`));
+ if(board[0]&&board[0].total)A.push(card("🔮","Best predictor",esc(board[0].name),`${board[0].correct} of ${board[0].total} correct`));
+ document.getElementById("aw").innerHTML=A.join("")||"<div class=card>Awards appear once players are sold.</div>"}catch(e){document.getElementById("aw").textContent="Could not load: "+e.message}}
+go();setInterval(go,15000);</script></body></html>

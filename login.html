@@ -1,0 +1,4 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Admin Login</title><link rel=stylesheet href=style.css></head>
+<body><div class=wrap style="max-width:380px;margin-top:10vh"><div class=card><div style="text-align:center"><img src="/assets/psl-logo.png" alt="Pakistan Super League logo" style="height:70px" onerror="this.style.display='none'"></div><h2 style="text-align:center">Admin Login</h2><div class=row><input id=e type=email placeholder=Email style="width:100%"><input id=p type=password placeholder=Password style="width:100%"><button id=b style="width:100%">Sign in</button></div><small id=m></small></div></div>
+<script type=module>import {sb} from "./lib.js";
+b.onclick=async()=>{const {error}=await sb.auth.signInWithPassword({email:e.value,password:p.value});if(error)m.textContent="Login failed: "+error.message;else location="admin.html"};</script></body></html>

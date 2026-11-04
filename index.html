@@ -1,0 +1,18 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=style.css><title>PSL 2027 Mock Auction</title></head>
+<body><div id=nav-root></div>
+<div class=wrap>
+<div class=card style="text-align:center;padding:28px"><div id=hl></div><h1 style="font-size:2.2em">PSL 2027 Mock Auction</h1><p style="color:var(--m)">Live player auction for all eight franchises – follow every bid, every SOLD and every squad.</p>
+<div class=row style="justify-content:center"><a class="btn g" href=live.html>▶ Watch Live Auction</a><a class="btn s" href=teams.html>Teams</a><a class="btn s" href=players.html>Players</a><a class="btn s" href=results.html>Results</a></div></div>
+<div class=card id=now style="margin-top:16px">Loading…</div>
+<div class=cards style="margin-top:16px" id=qs></div>
+<h2>Teams</h2><div class=tcg id=tg></div></div>
+<div id=foot-root></div>
+<script type=module>import {fmt,esc,sync,mountNav,mountFooter,teamCard,teamLogo,themeStyle,pslLogo,foreign,ph} from "./lib.js";
+mountNav("index.html");mountFooter();hl.innerHTML=pslLogo(110);
+const put=(e,h)=>{if(e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}};let S={players:[],teams:[],auction:[],history:[]};
+sync(["players","teams","auction","history"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+function draw(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),t=S.teams.find(x=>x.id===a.bid_team_id),live=p&&["live","paused"].includes(a.state);
+ put(now,live?`<div class=hero><img src="${esc(p.image||ph)}" onerror="this.src='${ph}'" style="width:110px;height:110px"><div><span class="badge Live">LIVE NOW</span><h2>${esc(p.name)}</h2><div>${esc(p.country)} · ${esc(p.role)}</div><div class=price style="font-size:1.8em">${fmt(a.current_bid)}</div><div>${t?teamLogo(t,28)+" "+esc(t.name):"Waiting for first bid"}</div></div><a class="btn g" href=live.html style="margin-left:auto">Open live screen →</a></div>`:"<b>No player is live right now.</b> <small>The live screen updates automatically when the auctioneer starts the next player.</small>");
+ const sd=S.players.filter(x=>x.status==="Sold"&&!x.acq);
+ put(qs,[["Registered players",S.players.length],["Sold",sd.length],["Unsold",S.players.filter(x=>x.status==="Unsold").length],["Total spending",fmt(sd.reduce((s,x)=>s+x.sold_price,0))]].map(([a,b])=>`<div class=card><small>${a}</small><b>${b}</b></div>`).join(""));
+ put(tg,S.teams.map(teamCard).join(""))}</script></body></html>
