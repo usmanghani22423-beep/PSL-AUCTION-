@@ -64,3 +64,14 @@ body.teampage button.bb,body.teampage #bidgo{background:var(--tp);color:var(--tp
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:url('/assets/psl-logo.png') no-repeat center 58%/min(72vmin,680px);opacity:.06}
 .wrap,.app,.foot{position:relative;z-index:1}
 @media print{body::before{display:none}}
+/* ---- attraction: splash, ticker, bid pop, entrance, slam, alarm ---- */
+#splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-content:center;justify-items:center;text-align:center;gap:6px;animation:spOut .6s 1.9s forwards}
+#splash img{animation:spZoom 1.2s ease-out}#splash h1{margin:.3em 0 0;letter-spacing:6px;font-size:clamp(1.3em,4vw,2.3em);background:linear-gradient(90deg,#fff 0,#F5C518 40%,#fff 80%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 1.8s linear infinite}#splash p{color:var(--m);margin:0}
+@keyframes spOut{to{opacity:0;visibility:hidden}}@keyframes spZoom{from{transform:scale(.6);opacity:0}}@keyframes shine{to{background-position:-200% 0}}
+.ticker{overflow:hidden;background:var(--bg2);border-bottom:1px solid var(--bd);white-space:nowrap;position:relative;z-index:1;font-size:.9em;color:var(--m)}.ticker div{display:inline-block;padding:7px 0;animation:marq 45s linear infinite}.ticker span{display:inline-block;padding-right:3em}@keyframes marq{to{transform:translateX(-50%)}}
+.pop{display:inline-block;animation:pop2 .5s ease-out}@keyframes pop2{0%{transform:scale(1.18);text-shadow:0 0 26px rgba(245,197,24,.9)}100%{transform:scale(1)}}
+.flash{animation:flash .8s ease-out}@keyframes flash{from{box-shadow:0 0 0 0 var(--tp,#F5C518)}to{box-shadow:0 0 0 22px transparent}}
+.enter .stage img{animation:zoomin .7s ease-out}.enter .stage h1{animation:slidein .6s ease-out}@keyframes zoomin{from{transform:scale(.7) rotate(-4deg);opacity:0}}@keyframes slidein{from{transform:translateX(-30px);opacity:0}}
+#scw .sc{animation:slam .55s ease-out}@keyframes slam{0%{transform:scale(1.7) rotate(-4deg);opacity:0}60%{transform:scale(.96)}100%{transform:scale(1);opacity:1}}
+body.alarm::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;box-shadow:inset 0 0 130px rgba(217,83,79,.6);animation:alarm .7s infinite alternate}@keyframes alarm{from{opacity:.35}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important}}

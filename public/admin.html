@@ -16,7 +16,7 @@ const tbl=(h,r)=>`<div class=tw><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}
 const save=(n,rows)=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),"Sheet1");XLSX.writeFile(wb,n)};
 const tsel=(id,v)=>`<select id=${id}><option value="">— team —</option>${S.teams.map(t=>`<option value=${t.id} ${t.id==v?"selected":""}>${esc(t.name)}</option>`).join("")}</select>`;
 const ALL=["players","teams","team_contacts","team_codes","bids","bid_rules","announcement","rules","auction","history","notifications"];
-function apply(o){for(const k in o)S[k]=k==="auction"?(o[k][0]||{}):o[k];hdr();
+function apply(o){for(const k in o)S[k]=k==="auction"?(o[k][0]||{}):o[k];hdr();if(["sold","unsold"].includes(S.auction.state)&&pick&&pick===S.auction.player_id){pick="";const ap=g("ap");if(ap&&document.activeElement!==ap)ap.value="";const bl=g("bpl");if(bl)bl.textContent=""}
  if(tab==="auction"&&g("lv1")){const set=(id,h)=>{const e=g(id);if(e&&e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}};set("lv1",dyn1());set("lv2",dyn2());set("pl",popts());if(g("fli"))set("fli",fli());return}
  if(!document.activeElement?.matches("input,select"))render()}
 async function refresh(){apply(await loadAll(ALL))}
@@ -68,7 +68,7 @@ const dyn2=()=>{const a=S.auction,p=pm(a.player_id),hb=tm(a.bid_team_id),last={}
  ${p?tbl(["Team","Bid status","Last bid","Purse left"],S.teams.map(t=>{const l=last[t.id];return [esc(t.name),a.bid_team_id===t.id?'<span class="badge Sold">🏆 Highest</span>':l?'<span class=badge>Bid placed</span>':"<small>No bid</small>",l?fmt(l.amount):"—",fmt(t.purse-t.spent)]})):""}`};
 let flt={cat:"",bt:"",org:"",bp:"",pool:"fresh",ord:"seq"};
 const matches=p=>(!flt.cat||cat(p)===flt.cat)&&(!flt.bt||bowlType(p)===flt.bt)&&(!flt.org||(flt.org==="fo")===foreign(p))&&(!flt.bp||String(p.base_price)===flt.bp);
-const poolList=()=>S.players.filter(p=>(flt.pool==="unsold"?p.status==="Unsold":["Available","Upcoming"].includes(p.status))&&matches(p)).sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true}));
+const poolList=()=>S.players.filter(p=>(flt.pool==="unsold"?p.status==="Unsold":["Available","Upcoming"].includes(p.status))&&!(["sold","unsold"].includes(S.auction.state)&&p.id===S.auction.player_id&&flt.pool!=="unsold")&&matches(p)).sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true}));
 const fli=()=>{const l=poolList();return l.length+" players in this group · "+(flt.ord==="rnd"?"next one is random":"next: "+(l[0]?esc(l[0].name):"—"))};
 const filterRow=()=>{const o=(v,l,c)=>`<option value="${esc(v)}" ${String(v)===String(c)?"selected":""}>${esc(l)}</option>`,cats=CATS.filter(c=>c!=="Other"),prices=[...new Set(S.players.filter(p=>p.status!=="Sold").map(p=>p.base_price))].sort((a,b)=>b-a),
  rules=rulesText(S.bid_rules);

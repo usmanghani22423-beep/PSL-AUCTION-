@@ -7,8 +7,8 @@
 <div class=cards style="margin-top:16px" id=qs></div>
 <h2>Teams</h2><div class=tcg id=tg></div></div>
 <div id=foot-root></div>
-<script type=module>import {fmt,esc,sync,mountNav,mountFooter,teamCard,teamLogo,themeStyle,pslLogo,foreign,ph} from "./lib.js";
-mountNav("index.html");mountFooter();hl.innerHTML=pslLogo(110);
+<script type=module>import {fmt,esc,sync,mountNav,mountFooter,teamCard,teamLogo,themeStyle,pslLogo,foreign,ph,splash} from "./lib.js";
+mountNav("index.html");mountFooter();splash();hl.innerHTML=pslLogo(110);
 const put=(e,h)=>{if(e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}};let S={players:[],teams:[],auction:[],history:[]};
 sync(["players","teams","auction","history"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
 function draw(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),t=S.teams.find(x=>x.id===a.bid_team_id),live=p&&["live","paused"].includes(a.state);
