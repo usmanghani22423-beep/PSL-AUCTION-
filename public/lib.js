@@ -3,7 +3,7 @@ import {SUPABASE_URL,SUPABASE_ANON_KEY} from "./config.js";
 export const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 export const fmt=n=>"Rs. "+Number(n||0).toLocaleString("en-PK");
 export const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-export const ph="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#17232D"/><circle cx="100" cy="75" r="35" fill="#30424E"/><rect x="45" y="120" width="110" height="80" rx="40" fill="#30424E"/></svg>');
+export const ph="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#062722"/><circle cx="100" cy="75" r="35" fill="#174C3D"/><rect x="45" y="120" width="110" height="80" rx="40" fill="#174C3D"/></svg>');
 export async function loadAll(tables){const o={};await Promise.all(tables.map(async t=>{const {data,error}=await sb.from(t).select("*");if(error)throw error;o[t]=data}));return o}
 export function watch(tables,cb,st){const ch=sb.channel("rt"+Math.random());tables.forEach(t=>ch.on("postgres_changes",{event:"*",schema:"public",table:t},cb));
  ch.subscribe(s=>{const ok=s==="SUBSCRIBED";st&&st(ok);if(ok)cb()});return ch}
@@ -28,12 +28,12 @@ export const rv=(rules,k,d)=>Number(rules.find(r=>r.key===k)?.val??d);
 export function balance(list,rules){const need={Batter:rv(rules,"min_batter",4),Wicketkeeper:rv(rules,"min_wk",2),"All-rounder":rv(rules,"min_ar",2),Bowler:rv(rules,"min_bowler",4)},cnt=c=>list.filter(p=>cat(p)===c).length;
  const chips=Object.entries(need).map(([c,n])=>`<span class=badge style="background:${cnt(c)>=n?"var(--g)":"#8A6D1A"};margin:2px;display:inline-block">${c} ${cnt(c)}/${n}</span>`).join("");
  const fc=list.filter(foreign).length,fm=rv(rules,"foreign_max",7),lack=Object.entries(need).filter(([c,n])=>cnt(c)<n).map(([c,n])=>`${n-cnt(c)} more ${c}`);
- return chips+`<span class=badge style="background:${fc>=fm?"var(--r)":"#30424E"};margin:2px;display:inline-block">✈️ ${fc}/${fm}</span>`+(lack.length?`<div><small>⚠ Still needs: ${lack.join(", ")}</small></div>`:"")}
+ return chips+`<span class=badge style="background:${fc>=fm?"var(--r)":"#174C3D"};margin:2px;display:inline-block">✈️ ${fc}/${fm}</span>`+(lack.length?`<div><small>⚠ Still needs: ${lack.join(", ")}</small></div>`:"")}
 // Install as an app (Add to Home screen) + service worker
-try{const m={name:"PSL 2027 Mock Auction",short_name:"PSL Auction",start_url:location.href,scope:location.origin+"/",display:"standalone",background_color:"#101820",theme_color:"#17232D",icons:[{src:location.origin+"/icon-192.png",sizes:"192x192",type:"image/png"},{src:location.origin+"/icon-512.png",sizes:"512x512",type:"image/png"}]};
+try{const m={name:"PSL 2027 Mock Auction",short_name:"PSL Auction",start_url:location.href,scope:location.origin+"/",display:"standalone",background_color:"#031B18",theme_color:"#062722",icons:[{src:location.origin+"/icon-192.png",sizes:"192x192",type:"image/png"},{src:location.origin+"/icon-512.png",sizes:"512x512",type:"image/png"}]};
  const l=document.createElement("link");l.rel="manifest";l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));document.head.appendChild(l);
  const a=document.createElement("link");a.rel="apple-touch-icon";a.href="/icon-192.png";document.head.appendChild(a);
- const t=document.createElement("meta");t.name="theme-color";t.content="#17232D";document.head.appendChild(t);
+ const t=document.createElement("meta");t.name="theme-color";t.content="#062722";document.head.appendChild(t);
  if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js")}catch(e){}
 
 // ================= Redesign helpers: themes, logos, nav, cards =================
@@ -47,8 +47,10 @@ export const THEMES={
  "hyderabad-kingsmen":{p:"#C65A32",s:"#702B24",a:"#F2C879",t:"#FFFFFF"},
  "rawalpindi-pindiz":{p:"#E87524",s:"#292929",a:"#F5C518",t:"#FFFFFF"}};
 export const slugOf=t=>{const n=String(t?.name||"").toLowerCase();return n.includes("karachi")?"karachi-kings":n.includes("lahore")?"lahore-qalandars":n.includes("islamabad")?"islamabad-united":n.includes("peshawar")?"peshawar-zalmi":n.includes("quetta")?"quetta-gladiators":n.includes("multan")?"multan-sultans":n.includes("hyderabad")?"hyderabad-kingsmen":n.includes("rawalpindi")?"rawalpindi-pindiz":""};
-export const themeOf=t=>{const c=THEMES[slugOf(t)];return c?{...c}:{p:t?.color||"#16A36A",s:"#17232D",a:"#D4AF37",t:"#FFFFFF"}};
-export const onColor=h=>{const m=/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(h||"");if(!m)return"#fff";const [r,g,b]=[1,2,3].map(i=>parseInt(m[i],16));return(0.299*r+0.587*g+0.114*b)>150?"#101820":"#fff"};
+const shade=(h,k)=>{const m=/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(h||"");if(!m)return"#062722";const f=i=>Math.max(0,Math.min(255,Math.round(parseInt(m[i],16)*(1+k)))).toString(16).padStart(2,"0");return"#"+f(1)+f(2)+f(3)};
+// built-in palette unless the admin picked a different colour for the team (then it is derived from that colour)
+export const themeOf=t=>{const c=THEMES[slugOf(t)],col=(t?.color||"").trim();if(c&&(!col||col.toLowerCase()===c.p.toLowerCase()))return{...c};const p=col||c?.p||"#00A86B";return{p,s:shade(p,-.55),a:c?.a||"#F5C518",t:"#FFFFFF"}};
+export const onColor=h=>{const m=/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(h||"");if(!m)return"#fff";const [r,g,b]=[1,2,3].map(i=>parseInt(m[i],16));return(0.299*r+0.587*g+0.114*b)>150?"#031B18":"#fff"};
 export const themeStyle=t=>{const k=themeOf(t);return `--tp:${k.p};--ts:${k.s};--ta:${k.a};--tt:${k.t};--tpt:${onColor(k.p)}`};
 export const initials=n=>String(n||"?").split(/\s+/).filter(Boolean).map(w=>w[0]).join("").slice(0,2).toUpperCase();
 export const teamLogo=(t,px=40)=>{if(!t)return"";const sl=slugOf(t),k=themeOf(t),f=t.logo?` data-f="${esc(t.logo)}"`:"";

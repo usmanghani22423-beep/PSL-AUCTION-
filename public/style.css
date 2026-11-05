@@ -1,4 +1,4 @@
-:root{--bg:#101820;--bg2:#17232D;--card:#1D2D38;--t:#FFFFFF;--m:#B8C5CE;--gold:#D4AF37;--g:#16A36A;--r:#D94343;--bd:#30424E}
+:root{--bg:#031B18;--bg2:#062722;--card:#0B3029;--side:#071F1C;--t:#F4F7F5;--m:#A8B8B1;--gold:#F5C518;--g:#00A86B;--g2:#39D353;--r:#D9534F;--bd:#174C3D}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
 h1,h2,h3{margin:.3em 0}a{color:var(--gold)}small{color:var(--m)}img{max-width:100%}
 .psl-logo{background-image:url('/assets/psl-logo.png');background-repeat:no-repeat;background-position:center;background-size:contain}
@@ -7,7 +7,7 @@ h1,h2,h3{margin:.3em 0}a{color:var(--gold)}small{color:var(--m)}img{max-width:10
 .nav{display:flex;align-items:center;gap:14px;padding:8px 18px;background:var(--bg2);border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:20;flex-wrap:wrap}
 .nav .brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:800;letter-spacing:.5px}.brand small{display:block;color:var(--gold);font-weight:600;font-size:.7em}
 .nav ul{display:flex;gap:4px;list-style:none;margin:0 0 0 auto;padding:0}.nav li a{display:block;padding:8px 12px;border-radius:6px;color:var(--m);text-decoration:none;transition:background .15s,color .15s}
-.nav li a:hover{background:var(--bd);color:#fff}.nav li a.on{background:var(--gold);color:#101820;font-weight:700}.burger{display:none;margin-left:auto}.conn{white-space:nowrap}
+.nav li a:hover{background:var(--bd);color:#fff}.nav li a.on{background:var(--gold);color:#031B18;font-weight:700}.burger{display:none;margin-left:auto}.conn{white-space:nowrap}
 body.teampage .nav{border-bottom-color:var(--tp)}
 @media(max-width:900px){.burger{display:block}.nav ul{display:none;width:100%;flex-direction:column;margin:0}.nav ul.open{display:flex}}
 .foot{border-top:1px solid var(--bd);margin-top:30px;padding:20px;text-align:center;color:var(--m);font-size:.85em}
@@ -19,21 +19,21 @@ body.teampage .nav{border-bottom-color:var(--tp)}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}.cards b{display:block;font-size:1.15em;color:var(--gold)}
 .hero{display:flex;gap:20px;align-items:center;flex-wrap:wrap}.hero img{width:180px;height:180px;object-fit:cover;border-radius:12px;border:3px solid var(--gold)}
 .price{font-size:2.4em;color:var(--gold);font-weight:800}.badge{padding:3px 10px;border-radius:99px;background:var(--bd);font-size:.8em;color:#fff}
-.badge.Sold,.badge.Sent{background:var(--g)}.badge.Unsold,.badge.Failed{background:var(--r)}.badge.Live{background:var(--gold);color:#101820}
+.badge.Sold,.badge.Sent{background:var(--g)}.badge.Unsold,.badge.Failed{background:var(--r)}.badge.Live{background:var(--gold);color:#031B18}
 table{width:100%;border-collapse:collapse;font-size:.9em}th,td{padding:8px;text-align:left;border-bottom:1px solid var(--bd)}th{color:var(--m);font-weight:600}.tw{overflow-x:auto}
 input,select,button{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:#fff}
 button,a.btn{background:var(--g);border:0;cursor:pointer;font-weight:600;color:#fff;text-decoration:none;padding:8px 12px;border-radius:8px;display:inline-block;transition:filter .15s}
-button:hover,a.btn:hover{filter:brightness(1.12)}button:disabled{opacity:.5;cursor:not-allowed;filter:none}button.s,a.btn.s{background:var(--bd)}button.d{background:var(--r)}button.g,a.btn.g{background:var(--gold);color:#101820}
+button:hover,a.btn:hover{filter:brightness(1.12)}button:disabled{opacity:.5;cursor:not-allowed;filter:none}button.s,a.btn.s{background:var(--bd)}button.d{background:var(--r)}button.g,a.btn.g{background:var(--gold);color:#031B18}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center}
 .app{display:flex;min-height:calc(100vh - 52px)}nav{width:200px;background:var(--bg2);display:flex;flex-direction:column;padding:10px;gap:4px;border-right:1px solid var(--bd)}
-nav button{background:none;text-align:left;color:var(--m);white-space:nowrap}nav button.on{background:var(--gold);color:#101820}main{flex:1;padding:16px;min-width:0}
+nav button{background:none;text-align:left;color:var(--m);white-space:nowrap}nav button.on{background:var(--gold);color:#031B18}main{flex:1;padding:16px;min-width:0}
 #sold{position:fixed;inset:0;display:none;place-items:center;background:rgba(16,24,32,.94);z-index:50;text-align:center;overflow:auto;padding:16px}#sold.show{display:grid}
 .soldh{font-size:min(16vw,6em);color:var(--g);margin:0 0 8px;letter-spacing:4px;animation:pop .5s ease-out}@keyframes pop{from{transform:scale(.6);opacity:0}}
 #toast{position:fixed;bottom:16px;right:16px;background:var(--g);padding:10px 16px;border-radius:8px;display:none;z-index:60}#toast.show{display:block}#toast.bad{background:var(--r)}
 .logo{width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px}
 details{border-bottom:1px solid var(--bd);padding:6px 0}summary{cursor:pointer;padding:6px 0}
 .call{color:var(--r);animation:pulse .6s infinite alternate;margin:.2em 0}@keyframes pulse{to{transform:scale(1.05)}}
-#ann{display:none;background:var(--gold);color:#101820;font-weight:700;text-align:center;padding:10px}
+#ann{display:none;background:var(--gold);color:#031B18;font-weight:700;text-align:center;padding:10px}
 /* team logo (image with initials fallback) */
 .tl{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:800;position:relative;overflow:hidden;vertical-align:middle;flex:none}
 .tl img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.tl.ok{background:transparent!important;font-size:0!important}
@@ -48,7 +48,7 @@ details{border-bottom:1px solid var(--bd);padding:6px 0}summary{cursor:pointer;p
 .pcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
 .pc{background:var(--card);border:1px solid var(--bd);border-radius:10px;overflow:hidden;transition:transform .15s}.pc:hover{transform:translateY(-2px)}
 .pc img.pi{width:100%;aspect-ratio:1;object-fit:cover;background:var(--bg2);display:block}.pc-i{padding:10px 12px}.pc-i h3{margin:0 0 4px;font-size:1.05em}
-.pc.sold{border-color:var(--tp);border-top:4px solid var(--tp)}.pc.unsold{background:#151D24}.pc-f{display:flex;justify-content:space-between;align-items:center;margin-top:8px}.pc-t{margin-top:8px;display:flex;gap:6px;align-items:center;font-size:.9em}
+.pc.sold{border-color:var(--tp);border-top:4px solid var(--tp)}.pc.unsold{background:#0A2A24}.pc-f{display:flex;justify-content:space-between;align-items:center;margin-top:8px}.pc-t{margin-top:8px;display:flex;gap:6px;align-items:center;font-size:.9em}
 /* team card + dashboard */
 .tcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
 .tc{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--bd);border-left:6px solid var(--tp);border-radius:10px;padding:12px;color:#fff;text-decoration:none;transition:transform .15s}.tc:hover{transform:translateY(-2px)}.tc small{display:block}
@@ -61,3 +61,6 @@ body.teampage button.bb,body.teampage #bidgo{background:var(--tp);color:var(--tp
 @media(max-width:800px){.grid{grid-template-columns:1fr}.app{flex-direction:column}nav{flex-direction:row!important;overflow:auto;width:100%!important;border-right:0}.wrap{padding:10px}main{padding:10px}.hero{flex-direction:column;text-align:center}.hero img{width:130px;height:130px}.price{font-size:2em}.top{padding:10px 12px}button,select,input,a.btn{min-height:42px}.cards{grid-template-columns:repeat(2,1fr)}th,td{padding:6px 4px}.sc-b{flex-direction:column;text-align:center}.sc-t{justify-content:center}.sgrid{grid-template-columns:1fr}}
 @media(min-width:1500px){body.live .wrap{max-width:1750px}body.live .big{font-size:5em}}
 @media print{.top,.nav,nav,button,#toast,a.btn,.foot{display:none!important}body{background:#fff;color:#000}.card,.td,.sc,.pc{background:#fff;color:#000;border:1px solid #999}small,th{color:#444}.badge{background:#ddd;color:#000}}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:url('/assets/psl-logo.png') no-repeat center 58%/min(72vmin,680px);opacity:.06}
+.wrap,.app,.foot{position:relative;z-index:1}
+@media print{body::before{display:none}}
