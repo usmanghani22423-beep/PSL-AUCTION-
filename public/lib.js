@@ -10,12 +10,12 @@ export function watch(tables,cb,st){const ch=sb.channel("rt"+Math.random());tabl
 
 const PK={players:"id",teams:"id",history:"player_id",bids:"id",notifications:"player_id",team_contacts:"team_id",auction:"id",bid_rules:"min_price",rules:"key",announcement:"id"};
 // Row-level realtime store: applies INSERT/UPDATE/DELETE events directly (no refetch), full reload on every (re)connect.
-export function sync(tables,apply,st){const store={};let tm;const sched=()=>{clearTimeout(tm);tm=setTimeout(()=>apply(store),100)};
+export function sync(tables,apply,st){const store={};let tm;let due=Infinity;const sched=(ms=100)=>{const at=Date.now()+ms;if(at>=due)return;due=at;clearTimeout(tm);tm=setTimeout(()=>{due=Infinity;apply(store)},ms)};
  const full=async()=>{const o=await loadAll(tables);tables.forEach(t=>store[t]=o[t]);apply(store)};
  const ch=sb.channel("rt"+Math.random());
  tables.forEach(t=>ch.on("postgres_changes",{event:"*",schema:"public",table:t},p=>{const k=PK[t],rows=store[t]||(store[t]=[]);
   if(p.eventType==="DELETE"){const id=p.old[k];store[t]=rows.filter(r=>r[k]!==id)}
-  else{const i=rows.findIndex(r=>r[k]===p.new[k]);i>=0?rows[i]=p.new:rows.push(p.new)}sched()}));
+  else{const i=rows.findIndex(r=>r[k]===p.new[k]);i>=0?rows[i]=p.new:rows.push(p.new)}sched(t==="auction"||t==="bids"?0:100)}));
  ch.subscribe(x=>{const ok=x==="SUBSCRIBED";st&&st(ok);if(ok)full().catch(e=>console.error(e))});
  return {ch,set(t,rows){store[t]=rows;sched()}}}
 
@@ -70,3 +70,7 @@ export function teamDash(t,players,rules){const mine=players.filter(p=>p.team_id
  <div style="margin:8px 0">${balance(mine,rules||[])}</div>
  <div class=tw><table><tr><th>Player</th><th>Role</th><th>Country</th><th>Price</th><th>Status</th></tr>${mine.map(p=>`<tr><td>${esc(p.name)}${foreign(p)?" ✈️":""}</td><td>${esc(p.role)}</td><td>${esc(p.country)}</td><td>${fmt(p.sold_price)}</td><td><span class="badge Sold">${esc(p.acq||"SOLD")}</span></td></tr>`).join("")||"<tr><td colspan=5>No players yet</td></tr>"}</table></div>
  <h3 style="margin-top:16px">Sold player cards</h3><div class=sgrid>${mine.map(p=>soldCard(p,t)).join("")||"<small>No players purchased yet</small>"}</div></div>`}
+export const bowlType=p=>{const b=String(p.bowl||"").toLowerCase();if(!b||/not applicable|^n\/?a$|none/.test(b))return"";if(/spin|orthodox|wrist|break|chinaman|googly/.test(b))return"Spin";if(/fast|medium|pace|seam/.test(b))return"Fast";return""};
+export const bpLabel=v=>+(Number(v)/1e7).toFixed(2)+" Cr";
+export const lc=v=>v>=1e7?+(v/1e7).toFixed(2)+" Cr":+(v/1e5).toFixed(2)+" Lakh";
+export const rulesText=rules=>{const r=[...rules].sort((a,b)=>a.min_price-b.min_price);return r.map((x,i)=>{const n=r[i+1];return(i===0&&n?"Under "+lc(n.min_price):n?lc(x.min_price)+" – "+lc(n.min_price):lc(x.min_price)+" and above")+": +"+lc(x.step)}).join(" · ")};
