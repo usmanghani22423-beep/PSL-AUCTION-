@@ -1,0 +1,14 @@
+Run these in Supabase > SQL Editor, each ONCE, in this order (skip the ones you already ran):
+ 1 schema.sql
+ 2 update-bidding.sql, update-bidding-2.sql, update-bidding-3.sql
+ 3 update-squads.sql
+ 4 update-audience.sql
+ 5 update-features.sql
+ 6 update-rules.sql
+ 7 update-fun.sql
+ 8 update-redesign.sql
+ 9 update-colors.sql
+10 update-increments.sql      official bid raises
+11 update-accelerated.sql     accelerated round                       <- NEW
+12 update-xi-power.sql        Playing XI, time-out card, finale       <- NEW
+13 update-broadcast.sql       reveal, reactions, ticker, sounds, undo bid, skip, countdown reset  <- NEW
