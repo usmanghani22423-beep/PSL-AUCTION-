@@ -16,6 +16,7 @@ const pm=id=>S.players.find(p=>p.id===id),tm=id=>S.teams.find(t=>t.id===id),cn=i
 const tbl=(h,r)=>`<div class=tw><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${r.map(x=>`<tr>${x.map(y=>`<td>${y}</td>`).join("")}</tr>`).join("")||`<tr><td colspan=${h.length}>No data</td></tr>`}</table></div>`;
 const save=(n,rows)=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),"Sheet1");XLSX.writeFile(wb,n)};
 const tsel=(id,v)=>`<select id=${id}><option value="">— team —</option>${S.teams.map(t=>`<option value=${t.id} ${t.id==v?"selected":""}>${esc(t.name)}</option>`).join("")}</select>`;
+const ctlCh=sb.channel("ctl").subscribe();
 const ALL=["players","teams","team_contacts","team_codes","bids","bid_rules","announcement","rules","settings","ticker_items","auction","history","notifications"];
 function apply(o){for(const k in o)S[k]=k==="auction"?(o[k][0]||{}):o[k];hdr();if(["sold","unsold"].includes(S.auction.state)&&pick&&pick===S.auction.player_id){pick="";const ap=g("ap");if(ap&&document.activeElement!==ap)ap.value="";const bl=g("bpl");if(bl)bl.textContent=""}
  if(tab==="auction"&&g("lv1")){const set=(id,h)=>{const e=g(id);if(e&&e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}};set("lv1",dyn1());set("lv2",dyn2());set("pl",popts());if(g("fli"))set("fli",fli());if(g("tgl"))set("tgl",tglHtml());return}
@@ -85,7 +86,7 @@ const filterRow=()=>{const o=(v,l,c)=>`<option value="${esc(v)}" ${String(v)===S
  <label><small>Base price</small><br><select onchange="A.flt('bp',this.value)">${o("","All",flt.bp)}${prices.map(v=>o(v,bpLabel(v),flt.bp)).join("")}</select></label>
  <label><small>Players</small><br><select onchange="A.flt('pool',this.value)">${o("fresh","Not yet auctioned",flt.pool)}${o("unsold","Unsold (re-auction)",flt.pool)}${o("accel","⚡ Accelerated round",flt.pool)}</select></label>
  <label><small>Order</small><br><select onchange="A.flt('ord',this.value)">${o("seq","List order",flt.ord)}${o("rnd","Random",flt.ord)}</select></label>
- <span id=tgl>${tglHtml()}</span><button class=g onclick="A.next()">▶ Next player</button><button class=s onclick="A.accel()" title="Unsold players come back with a reduced base price">⚡ Accelerated round (${S.players.filter(p=>p.status==="Unsold").length} unsold)</button></div><small id=fli>${fli()}</small><br><small>Bid raise rules: ${esc(rules)} (change in Settings)</small>`};
+ <span id=tgl>${tglHtml()}</span><button class=g onclick="A.next()">▶ Next player</button><button class=s onclick="A.accel()" title="Unsold players come back with a reduced base price">⚡ Accelerated round (${S.players.filter(p=>p.status==="Unsold"&&!p.accel).length} unsold)</button></div><small id=fli>${fli()}</small><br><small>Bid raise rules: ${esc(rules)} (change in Settings)</small>`};
 const popts=()=>poolList().map(x=>`<option value="${esc(x.name+" · "+x.id)}">`).join("");
 const RL=[["foreign_max","Max foreign players per squad"],["min_squad","Minimum squad size"],["reserve_per_slot","Reserve per remaining slot (Rs.)"],["cooldown_sec","Bid cooldown (seconds)"],["timeouts_per_team","Time-outs per team"],["timer_reset_sec","Countdown reset after a last-3-second bid (seconds)"],["low_purse_pct","Low purse warning (% of budget left)"],["min_batter","Minimum Batters"],["min_wk","Minimum Wicketkeepers"],["min_ar","Minimum All-rounders"],["min_bowler","Minimum Bowlers"]];
 const V={
@@ -162,7 +163,7 @@ const A=window.A={q(v){q=v.toLowerCase();render();const n=g("q");n.focus();n.set
  saveContact(k){const w=g("cw_"+k).value.replace(/[\s-]/g,"");if(w&&!/^\+\d{8,15}$/.test(w))return toast("WhatsApp needs country code, e.g. +923001234567",1);
   run(()=>W(sb.from("team_contacts").upsert({team_id:k,manager:g("cm_"+k).value,email:g("ce_"+k).value.trim(),whatsapp:w,email_pref:g("cp_"+k).checked,wa_pref:g("cq_"+k).checked,wa_consent:g("cc_"+k).checked})),"Contact saved")},
  exportSquads(){save("team-squads.xlsx",S.players.filter(p=>p.team_id&&p.status==="Sold").map(p=>({Team:tm(p.team_id)?.name,Player:p.name,Category:cat(p),Country:p.country,Foreign:foreign(p)?"Yes":"No",Type:p.acq||"Auction",Price:p.sold_price})).sort((a,b)=>String(a.Team).localeCompare(b.Team)))},
- accel(){const n=S.players.filter(p=>p.status==="Unsold").length;if(!n)return toast("No unsold players",1);if(!confirm(n+" unsold players will return with reduced base prices (4.2→2.2 Cr, 2.2→1.1 Cr, 1.1→0.6 Cr, 0.6 stays the same). Start the accelerated round?"))return;
+ accel(){const n=S.players.filter(p=>p.status==="Unsold"&&!p.accel).length;if(!n)return toast("No eligible unsold players (a player who already went unsold in the accelerated round is not repeated)",1);if(!confirm(n+" unsold players will return with reduced base prices (4.2→2.2 Cr, 2.2→1.1 Cr, 1.1→0.6 Cr, 0.6 stays the same). Start the accelerated round?"))return;
   run(async()=>{await W(sb.rpc("accelerated_round"));flt.pool="accel";flt.cat="";flt.bt="";flt.org="";flt.bp="";await refresh();lastR={};render()},"Accelerated round started")},
  flt(k,v){flt[k]=v;if(k==="cat"&&v!=="Bowler")flt.bt="";lastR={};render()},
  next(){const l=poolList();if(!l.length)return toast("No players in this group",1);const q=flt.ord==="rnd"?l[Math.floor(Math.random()*l.length)]:l[0];
@@ -198,7 +199,7 @@ const A=window.A={q(v){q=v.toLowerCase();render();const n=g("q");n.focus();n.set
  saveRules(){run(()=>W(sb.from("rules").upsert(RL.map(([k])=>({key:k,val:Number(g("ru_"+k).value)||0})))),"Rules saved")},
  go(k){tab=k;render()},
  defColor(k){const t=tm(k),c=THEMES[slugOf(t)];if(!c)return toast("This team has no built-in default colour",1);run(()=>W(sb.from("teams").update({color:c.p}).eq("id",k)),"Default colour restored")},
- setCfg(k,v){run(()=>W(sb.from("settings").upsert({key:k,val:String(v)})))},
+ setCfg(k,v){const val=String(v),i=S.settings.findIndex(x=>x.key===k);if(i>=0)S.settings[i]={...S.settings[i],val};else S.settings.push({key:k,val});apply({});try{ctlCh.send({type:"broadcast",event:"cfg",payload:{key:k,val}})}catch(e){}run(()=>W(sb.from("settings").upsert({key:k,val})))},
  volPrev(v){const e=g("volv");if(e)e.textContent=v+"%"},
  preview(k){preview(k,parseFloat(C("sound_master","0.8")))},
  addTick(){const t=g("tki").value.trim();if(!t)return;run(async()=>{await W(sb.from("ticker_items").insert({text:t}));g("tki").value=""},"Announcement added")},

@@ -55,7 +55,8 @@ if(TV){document.body.classList.add("tv");document.body.insertAdjacentHTML("after
 let S={players:[],teams:[],auction:[],history:[],bids:[],announcement:[],rules:[],settings:[],ticker_items:[],reaction_counts:[]},last=null,lastUn=null,lastBid="",lastCall=null,lastPid=null,lastTO=null,lastWar="",lastSec=null,revFlag=false,prevBidVal=0,prevBidPid=null,finClosed=false,finShown=false,seenAch=null,counts=[],board=[],localMute=false,lastRevPid=null;
 const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
 const VID=ls("pv")||(()=>{const v=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());ls("pv",v);return v})();
-const C=(k,d)=>{const r=S.settings.find(x=>x.key===k);return r?r.val:d},on=k=>C(k,"1")!=="0";
+const OV={};
+const C=(k,d)=>{const o=OV[k];if(o&&Date.now()-o.t<6000)return o.val;const r=S.settings.find(x=>x.key===k);return r?r.val:d},on=k=>C(k,"1")!=="0";
 let qrSvg="";try{const q=qrcode(0,"M");q.addData(location.origin+"/audience");q.make();qrSvg=q.createSvgTag(5)}catch(e){}
 const put=(e,h)=>{if(e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}},tn=id=>S.teams.find(t=>t.id===id)?.name||"—",TM=id=>S.teams.find(t=>t.id===id);
 const snd=document.getElementById("snd");
@@ -83,6 +84,9 @@ pr.onclick=async e=>{const b=e.target.closest("[data-t]"),a=S.auction[0]||{};if(
  const {error}=await sb.rpc("predict",{p_player:a.player_id,p_team:b.dataset.t,p_voter:VID,p_name:n});if(error)return alert(error.message);ls("pk_"+a.player_id,b.dataset.t);pull2()};
 const openT=new Set();sqb.addEventListener("toggle",e=>{const t=e.target.dataset?.t;if(t)e.target.open?openT.add(t):openT.delete(t)},true);
 sync(["players","teams","auction","history","bids","announcement","rules","settings","ticker_items","reaction_counts"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+// instant switch changes from the admin (broadcast) + a light safety poll
+sb.channel("ctl").on("broadcast",{event:"cfg"},p=>{const {key,val}=p.payload||{};if(!key)return;OV[key]={val,t:Date.now()};draw()}).subscribe();
+let setSig="";setInterval(async()=>{try{const {data}=await sb.from("settings").select("*");if(!data)return;const sig=JSON.stringify(data);if(sig!==setSig){setSig=sig;S.settings=data;draw()}}catch(e){}},3000);
 // achievements (derived only from real data)
 function achievements(){const L=[],sold=S.players.filter(p=>p.status==="Sold"&&!p.acq&&p.sold_at).sort((a,b)=>new Date(a.sold_at)-new Date(b.sold_at)),bc={},late={};
  [...S.bids].sort((a,b)=>a.id-b.id).forEach(b=>{bc[b.player_id]=(bc[b.player_id]||0)+1;late[b.player_id]=b.late});
