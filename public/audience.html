@@ -1,0 +1,178 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>PSL 2027 Mock Auction – Audience</title><link rel=stylesheet href=style.css>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+body.aud{padding-bottom:48px}.stage{display:grid;grid-template-columns:260px 1fr 170px;gap:22px;align-items:center;background:radial-gradient(circle at 18% 50%,rgba(245,197,24,.10),transparent 55%)}
+.stage img.ph0{width:100%;max-width:260px;aspect-ratio:1;object-fit:cover;border-radius:18px;border:4px solid var(--tp,var(--gold))}.stage.war{box-shadow:0 0 0 2px var(--r) inset}
+.big{font-size:3.4em;font-weight:900;color:var(--gold);line-height:1.1}.hb{font-size:1.3em;margin:6px 0}.bar{height:8px;background:var(--bd);border-radius:9px;overflow:hidden;margin:3px 0}.bar i,.rb2{display:block;height:100%;background:var(--tp,var(--g));transition:width .9s ease}
+.rt{height:10px;background:var(--bd);border-radius:9px;overflow:hidden;margin:4px 0}.tick div{padding:7px 0;border-bottom:1px solid var(--bd)}.tick div:first-child{font-size:1.1em;color:var(--gold)}
+#rx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:55}.fl{position:absolute;bottom:40px;font-size:2.4em;animation:up 3s ease-out forwards}@keyframes up{to{transform:translateY(-85vh);opacity:0}}
+.rb{font-size:1.1em;padding:6px 16px;background:var(--bd)}.rb span{font-size:1.5em}.rb small{display:block;font-size:.65em}
+.ringw{position:relative;width:150px;height:150px;margin:auto}.ringw svg{width:100%;height:100%}.ringw circle{fill:none;stroke-width:8}.ringw .rbg{stroke:var(--bd)}#rfg{stroke:var(--g);stroke-linecap:round;transition:stroke-dashoffset .25s linear,stroke .3s}
+#tmr{position:absolute;inset:0;display:grid;place-items:center;font-size:2.4em;font-weight:800}
+.mys{min-height:300px;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 50% 40%,rgba(245,197,24,.28),transparent 60%);animation:spot 1.6s ease-in-out infinite alternate}@keyframes spot{from{filter:brightness(.7)}to{filter:brightness(1.25)}}
+.mys .qm{font-size:8em;font-weight:900;color:var(--gold);line-height:1;text-shadow:0 0 40px rgba(245,197,24,.6)}.mys h2{letter-spacing:6px;margin:0}
+.tkb{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--bg2);border-top:2px solid var(--gold);display:flex;align-items:center;height:42px}.tkb .tkl{background:var(--gold);color:#031B18;font-weight:800;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;letter-spacing:1px}
+.tkb .tkm{overflow:hidden;white-space:nowrap;flex:1}.tkb .tkm div{display:inline-block;animation:marq 55s linear infinite}.tkb .tkm span{display:inline-block;padding-right:4em}@keyframes marq{to{transform:translateX(-50%)}}
+.fzg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}.fzc{background:var(--bg2);border:1px solid var(--bd);border-top:5px solid var(--tp);border-radius:12px;padding:12px;transition:transform .2s}.fzc:hover{transform:translateY(-2px)}
+.fzh{display:flex;align-items:center;gap:10px}.fzh>div{flex:1}.fzh small{display:block}.rk{font-size:1.3em}.fzs{display:flex;justify-content:space-between;gap:6px;margin:8px 0}.fzs small{display:block}.fzs b{color:var(--gold)}
+.ach{display:inline-block;margin:3px;padding:6px 12px;border:1px solid var(--gold);border-radius:99px;background:#0F3F34}.ach b{font-size:1.2em}.ach small{display:block;font-size:.7em}
+#achp{position:fixed;left:14px;bottom:56px;z-index:58;display:grid;gap:8px}.achp{background:var(--card);border:2px solid var(--gold);border-radius:12px;padding:10px 16px;animation:achin .5s ease-out,achout .5s 4.2s forwards}@keyframes achin{from{transform:translateX(-120%)}}@keyframes achout{to{opacity:0;transform:translateY(20px)}}
+#snd{position:fixed;right:14px;bottom:56px;z-index:58}#gate{position:fixed;inset:0;z-index:90;background:var(--bg);display:none;place-content:center;text-align:center}#gate.show{display:grid}
+#fin{position:fixed;inset:0;z-index:60;background:rgba(3,27,24,.97);display:none;overflow:auto;padding:20px}#fin.show{display:block}
+.trophy{width:150px;animation:rise 1.2s ease-out}.trophy .shine{animation:shn 2s ease-in-out infinite}@keyframes rise{from{transform:translateY(70px) scale(.5);opacity:0}}@keyframes shn{50%{opacity:.1}}
+.conn2{position:fixed;top:8px;right:12px;z-index:20}body.tv{font-size:1.25em}body.tv .big{font-size:5.5em}body.tv .wrap{max-width:1800px}
+@media(max-width:800px){.stage{grid-template-columns:1fr;text-align:center}.stage img.ph0{margin:auto;max-width:200px}.big{font-size:2.5em}.rb{padding:6px 10px}}
+</style></head>
+<body class=aud>
+<div id=nav-root></div><div id=ann></div><div id=rx></div><div id=achp></div>
+<div id=gate><div><h1>📺 Audience screen is offline</h1><p style="color:var(--m)">The auctioneer has switched this screen off. It will come back automatically.</p></div></div>
+<div id=sold><div style="max-width:760px;width:100%"><h1 class=soldh id=soldt>SOLD!</h1><div id=scw></div><h2 id=rb2 style="color:var(--gold)"></h2></div></div>
+<div id=fin><div id=finb></div></div>
+<div class=wrap>
+<div class=card id=cur>Waiting for auction…</div>
+<div class=card style="margin-top:12px" id=rxc><div class=row id=rxb style="justify-content:center"></div></div>
+<div class=card style="margin-top:12px" id=prog></div>
+<div class=grid style="margin-top:16px"><div>
+ <div class=card><h3>Live bids</h3><div class=tick id=tk></div></div>
+ <div class=card style="margin-top:16px"><h3>🎙 Commentary</h3><div id=cm></div></div>
+ <div class=card style="margin-top:16px"><h3>Recently sold</h3><div class=tw id=rec></div></div>
+ <div class=card style="margin-top:16px"><h3>Upcoming</h3><div id=up></div></div>
+</div><div>
+ <div class=card><h3>🔮 Predict the buyer</h3><div id=pr></div></div>
+ <div class=card style="margin-top:16px"><h3>🏅 Achievements</h3><div id=ac></div></div>
+ <div class=card style="margin-top:16px"><h3>Top buys</h3><div id=top></div></div>
+ <div class=card style="margin-top:16px"><h3>Statistics</h3><div id=st></div></div>
+</div></div>
+<div class=card style="margin-top:16px"><h3>🏟 Team Fan Zone &amp; live rankings</h3><small>💰 highest spender · 🛒 most purchases · 🏦 most purse left</small><div class=fzg id=fz style="margin-top:10px"></div></div>
+<div class=card style="margin-top:16px"><h3>Team squads</h3><div id=sqb></div></div>
+<p><a href=awards.html>🏅 Awards &amp; stats</a> · <a href=results.html>Results</a></p></div>
+<button id=snd class=g>🔊 Tap to enable sound</button>
+<div class=tkb id=tkb></div><div id=foot-root></div>
+<script type=module>import {sb,fmt,esc,ph,sync,squad,foreign,balance,mountNav,mountFooter,teamLogo,themeStyle,themeOf,soldCard,confetti,countUp,splash,cat,rv,pslLogo} from "./lib.js";
+import {play,unlock,isUnlocked,setSoundConfig} from "./sound.js";
+const TV=new URLSearchParams(location.search).get("tv")==="1";
+if(TV){document.body.classList.add("tv");document.body.insertAdjacentHTML("afterbegin",'<div class=conn2><i id=c class=dot></i><small id=cs></small></div>')}else{mountNav("audience.html");mountFooter();splash()}
+let S={players:[],teams:[],auction:[],history:[],bids:[],announcement:[],rules:[],settings:[],ticker_items:[],reaction_counts:[]},last=null,lastUn=null,lastBid="",lastCall=null,lastPid=null,lastTO=null,lastWar="",lastSec=null,revFlag=false,prevBidVal=0,prevBidPid=null,finClosed=false,finShown=false,seenAch=null,counts=[],board=[],localMute=false,lastRevPid=null;
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
+const VID=ls("pv")||(()=>{const v=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());ls("pv",v);return v})();
+const C=(k,d)=>{const r=S.settings.find(x=>x.key===k);return r?r.val:d},on=k=>C(k,"1")!=="0";
+let qrSvg="";try{const q=qrcode(0,"M");q.addData(location.origin+"/audience");q.make();qrSvg=q.createSvgTag(5)}catch(e){}
+const put=(e,h)=>{if(e.dataset.h!==h){e.innerHTML=h;e.dataset.h=h}},tn=id=>S.teams.find(t=>t.id===id)?.name||"—",TM=id=>S.teams.find(t=>t.id===id);
+const snd=document.getElementById("snd");
+const sp=()=>{const o={};for(const k of ["bid","warn","sold","unsold","applause","celebrate","reveal","war"])o[k]=on("snd_"+k);setSoundConfig({enabled:on("sound_enabled")&&!localMute,master:parseFloat(C("sound_master","0.8")),on:o})};
+const sndLabel=()=>{snd.textContent=!isUnlocked()?"🔊 Tap to enable sound":localMute?"🔇 Sound muted (this screen)":on("sound_enabled")?"🔊 Sound on":"🔇 Sound off (admin)"};
+snd.onclick=()=>{if(!isUnlocked()){unlock();play("bid",true)}else localMute=!localMute;sp();sndLabel()};
+document.addEventListener("click",e=>{if(!isUnlocked()&&e.target!==snd){unlock();sp();sndLabel()}},{once:true});
+// reactions
+const RK=[["CHEER","🎉"],["WOW","🤩"],["SHOCK","😱"],["CLAP","👏"]];
+const fl=e=>{const s=document.createElement("span");s.textContent=e;s.className="fl";s.style.left=(5+Math.random()*90)+"%";rx.appendChild(s);setTimeout(()=>s.remove(),3200)};
+const burst=l=>{for(let i=0;i<16;i++)setTimeout(()=>fl(l[i%l.length]),i*110)};
+const rch=sb.channel("reactions").on("broadcast",{event:"r"},p=>fl(p.payload.e)).subscribe();let rt=0;
+rxb.onclick=e=>{const b=e.target.closest("[data-k]");if(!b||Date.now()-rt<1000)return;rt=Date.now();fl(b.dataset.e);rch.send({type:"broadcast",event:"r",payload:{e:b.dataset.e}});sb.rpc("react",{p_kind:b.dataset.k}).then(r=>{if(r.error)console.warn(r.error.message)})};
+function rxDraw(){const a=S.auction[0]||{},off=!on("reactions_on");rxc.style.display=off?"none":"";if(off)return;const pid=a.player_id||"-";
+ put(rxb,RK.map(([k,e])=>{const n=S.reaction_counts.find(r=>r.id===pid+":"+k)?.n||0,tot=S.reaction_counts.filter(r=>r.kind===k).reduce((s,r)=>s+r.n,0);return `<button class=rb data-k="${k}" data-e="${e}"><span>${e}</span> ${k}<small>${n} now · ${tot} total</small></button>`}).join(""))}
+// predictions
+async function pull2(){try{const a=S.auction[0];if(a?.player_id)counts=(await sb.from("prediction_counts").select("*").eq("player_id",a.player_id)).data||[];board=(await sb.from("prediction_board").select("*").order("correct",{ascending:false}).limit(5)).data||[];drawPred()}catch(e){}}
+setInterval(pull2,5000);
+function drawPred(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),tot=counts.reduce((s,c)=>s+c.n,0);let h="";
+ if(p&&a.state==="live"){const mine=ls("pk_"+p.id);h=`<small>Who will buy ${esc(p.name)}?</small>`+S.teams.map(t=>{const n=counts.find(c=>c.team_id===t.id)?.n||0;return `<div><button class="${mine===t.id?"":"s"}" data-t="${t.id}" style="margin:2px 0;width:100%;text-align:left">${mine===t.id?"✅ ":""}${esc(t.name)} <small>${tot?Math.round(n*100/tot):0}%</small></button></div>`}).join("")}
+ else if(p&&a.state==="sold"){const ok=counts.find(c=>c.team_id===a.bid_team_id)?.n||0;h=tot?`<b>${Math.round(ok*100/tot)}%</b> of ${tot} predictors got it right 🎯`:"<small>No predictions for this player</small>"}
+ else h="<small>Predictions open when a player goes live.</small>";
+ put(pr,h+`<hr style="border-color:var(--bd)"><b>Top predictors</b>`+(board.map((b,i)=>`<div>${i+1}. ${esc(b.name)} — ${b.correct}/${b.total}</div>`).join("")||"<div><small>No votes yet</small></div>"))}
+pr.onclick=async e=>{const b=e.target.closest("[data-t]"),a=S.auction[0]||{};if(!b||a.state!=="live")return;let n=ls("pn");if(!n){n=prompt("Your name for the predictor leaderboard")||"Guest";ls("pn",n)}
+ const {error}=await sb.rpc("predict",{p_player:a.player_id,p_team:b.dataset.t,p_voter:VID,p_name:n});if(error)return alert(error.message);ls("pk_"+a.player_id,b.dataset.t);pull2()};
+const openT=new Set();sqb.addEventListener("toggle",e=>{const t=e.target.dataset?.t;if(t)e.target.open?openT.add(t):openT.delete(t)},true);
+sync(["players","teams","auction","history","bids","announcement","rules","settings","ticker_items","reaction_counts"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+// achievements (derived only from real data)
+function achievements(){const L=[],sold=S.players.filter(p=>p.status==="Sold"&&!p.acq&&p.sold_at).sort((a,b)=>new Date(a.sold_at)-new Date(b.sold_at)),bc={},late={};
+ [...S.bids].sort((a,b)=>a.id-b.id).forEach(b=>{bc[b.player_id]=(bc[b.player_id]||0)+1;late[b.player_id]=b.late});
+ let rec=0,mb=0;const tb={},tn0={},cnt={};S.teams.forEach(t=>cnt[t.id]=S.players.filter(p=>p.team_id===t.id&&p.status==="Sold"&&p.acq).length);
+ sold.forEach((p,i)=>{const t=TM(p.team_id),nm=t?.name||"",d=p.name,id=x=>x+":"+p.id;cnt[p.team_id]=(cnt[p.team_id]||0)+1;
+  if(i===0)L.push({id:id("first"),i:"🥇",t:"FIRST PURCHASE",s:nm,d});
+  if(rec>0&&p.sold_price>rec)L.push({id:id("rec"),i:"💥",t:"AUCTION RECORD",s:nm,d:d+" – "+fmt(p.sold_price)});
+  if((tn0[p.team_id]||0)>=2&&p.sold_price>(tb[p.team_id]||0))L.push({id:id("big"),i:"💰",t:"BIGGEST PURCHASE",s:nm,d:d+" – "+fmt(p.sold_price)});
+  if((bc[p.id]||0)>=5&&bc[p.id]>mb)L.push({id:id("war"),i:"🔥",t:"BIGGEST BID WAR",s:nm,d:d+" – "+bc[p.id]+" bids"});
+  if(late[p.id])L.push({id:id("late"),i:"⏱",t:"LAST SECOND PURCHASE",s:nm,d});
+  if(t&&cnt[p.team_id]===t.max_squad)L.push({id:id("full"),i:"🛡",t:"FULL SQUAD",s:nm,d:cnt[p.team_id]+"/"+t.max_squad});
+  rec=Math.max(rec,p.sold_price);mb=Math.max(mb,bc[p.id]||0);tb[p.team_id]=Math.max(tb[p.team_id]||0,p.sold_price);tn0[p.team_id]=(tn0[p.team_id]||0)+1});
+ const top=[...sold].sort((a,b)=>b.sold_price-a.sold_price)[0];if(top)L.push({id:"top:"+top.id,i:"🏆",t:"MOST EXPENSIVE PLAYER",s:tn(top.team_id),d:top.name+" – "+fmt(top.sold_price)});
+ return L}
+function achDraw(){const L=achievements();const ids=new Set(L.map(x=>x.id));
+ if(seenAch===null)seenAch=ids;else L.filter(x=>!seenAch.has(x.id)).forEach(x=>{seenAch.add(x.id);const d=document.createElement("div");d.className="achp";d.innerHTML=`<b style="font-size:1.4em">${x.i}</b> <b>${esc(x.t)}</b><br><small>${esc(x.s)} · ${esc(x.d)}</small>`;achp.appendChild(d);setTimeout(()=>d.remove(),4800)});
+ put(ac,[...L].reverse().slice(0,12).map(x=>`<span class=ach><b>${x.i}</b> ${esc(x.t)}<small>${esc(x.s)} · ${esc(x.d)}</small></span>`).join("")||"<small>Achievements appear as milestones are reached</small>")}
+// fan zone (stable DOM so bars animate)
+function fzDraw(){const T=S.teams,key=T.map(t=>t.id).join(",");if(fz.dataset.k!==key){fz.innerHTML=T.map(t=>`<div class=fzc data-t="${t.id}" style="${themeStyle(t)}"><div class=fzh>${teamLogo(t,48)}<div><b>${esc(t.name)}</b><small class=fzr></small></div><span class=rk></span></div><div class=fzs><div><small>Players</small><b class=fzp></b></div><div><small>Spent</small><b class=fzsp></b></div><div><small>Purse left</small><b class=fzl></b></div></div><small>Squad</small><div class=rt><i class=rb2 data-k=sq></i></div><small>Purse left</small><div class=rt><i class=rb2 data-k=pu></i></div></div>`).join("");fz.dataset.k=key}
+ const cnt=t=>S.players.filter(p=>p.team_id===t.id&&p.status==="Sold"&&!p.acq).length,hs=[...T].sort((a,b)=>b.spent-a.spent)[0],mp=[...T].sort((a,b)=>cnt(b)-cnt(a))[0],ml=[...T].sort((a,b)=>(b.purse-b.spent)-(a.purse-a.spent))[0],rank=[...T].sort((a,b)=>b.spent-a.spent).map(t=>t.id);
+ T.forEach(t=>{const el=fz.querySelector(`[data-t="${t.id}"]`);if(!el)return;const left=t.purse-t.spent;
+  el.querySelector(".fzp").textContent=t.squad_count+"/"+t.max_squad;el.querySelector(".fzsp").textContent=fmt(t.spent);el.querySelector(".fzl").textContent=fmt(left);
+  el.querySelector('[data-k=sq]').style.width=Math.min(100,t.squad_count/t.max_squad*100)+"%";el.querySelector('[data-k=pu]').style.width=Math.max(0,Math.min(100,t.purse?left/t.purse*100:0))+"%";
+  el.querySelector(".fzr").textContent="#"+(rank.indexOf(t.id)+1)+" by spending · "+cnt(t)+" bought";
+  el.querySelector(".rk").textContent=(hs&&hs.spent>0&&hs.id===t.id?"💰":"")+(mp&&cnt(mp)>0&&mp.id===t.id?"🛒":"")+(ml&&hs&&hs.spent>0&&ml.id===t.id?"🏦":"")})}
+function tickerHtml(a,war,lt){const it=[],h=[...S.history].sort((x,y)=>new Date(y.at)-new Date(x.at)).slice(0,8);
+ h.forEach((x,i)=>{const N=String(x.name).toUpperCase(),T=String(x.team||"").toUpperCase();if(x.status==="Unsold")it.push(N+" GOES UNSOLD!");else if(x.status==="Sold")it.push([`${T} SIGN ${N} FOR ${fmt(x.price)}!`,`${T} WIN THE BID FOR ${N}!`,`${N} SOLD FOR ${fmt(x.price)}!`][i%3])});
+ const sd=S.players.filter(p=>p.status==="Sold"&&!p.acq),best=[...sd].sort((x,y)=>y.sold_price-x.sold_price)[0];if(best)it.push(`BIGGEST BID OF THE AUCTION: ${String(best.name).toUpperCase()} – ${fmt(best.sold_price)}!`);
+ if(war)it.push(`A NEW BIDDING WAR HAS STARTED: ${tn(lt[3]).toUpperCase()} VS ${tn(lt[2]).toUpperCase()}!`);
+ S.ticker_items.forEach(x=>it.push(String(x.text).toUpperCase()));
+ const t=(it.length?it:["WELCOME TO THE PSL 2027 MOCK AUCTION"]).map(x=>`<span>🏏 ${esc(x)}</span>`).join("");return `<b class=tkl>PSL AUCTION LIVE</b><div class=tkm><div>${t}${t}</div></div>`}
+function finDraw(){const a=S.auction[0]||{},show=a.state==="complete"&&!finClosed;if(a.state!=="complete"){finClosed=false;finShown=false}fin.classList.toggle("show",show);if(!show)return;
+ const ps=S.players,sd=ps.filter(x=>x.status==="Sold"&&!x.acq),top=[...sd].sort((x,y)=>y.sold_price-x.sold_price).slice(0,5),spent=S.teams.reduce((s,t)=>s+t.spent,0),L=achievements().filter(x=>x.id.split(":")[0]!=="top"||true).reverse().slice(0,8);
+ const tbuy=t=>[...sd.filter(p=>p.team_id===t.id)].sort((x,y)=>y.sold_price-x.sold_price)[0];
+ put(finb,`<div style="max-width:1100px;margin:auto"><div class=row style="justify-content:flex-end"><button class=s id=finx>Close ✕</button></div>
+ <div style="text-align:center">${pslLogo(80)}<br><svg class=trophy viewBox="0 0 120 140"><path d="M30 10h60v35c0 22-14 38-30 40-16-2-30-18-30-40z" fill="#F5C518"/><path d="M30 20H10c0 20 8 32 24 36M90 20h20c0 20-8 32-24 36" fill="none" stroke="#F5C518" stroke-width="7"/><rect x="52" y="85" width="16" height="26" fill="#D4AF37"/><rect x="34" y="111" width="52" height="14" rx="3" fill="#F5C518"/><path class=shine d="M42 20v28" stroke="#fff" stroke-opacity=".6" stroke-width="5" stroke-linecap="round"/></svg>
+ <h1 class=soldh style="color:var(--gold)">PSL AUCTION COMPLETED</h1><div class=row style="justify-content:center">${S.teams.map(t=>teamLogo(t,52)).join("")}</div></div>
+ <div class=cards><div class=card><small>Players sold</small><b>${sd.length}</b></div><div class=card><small>Unsold</small><b>${ps.filter(x=>x.status==="Unsold").length}</b></div><div class=card><small>Total spending</small><b>${fmt(spent)}</b></div></div>
+ <div class=card><h3>Most expensive purchases</h3>${top.map((p,i)=>`<div>${i+1}. <b>${esc(p.name)}</b> ${teamLogo(TM(p.team_id),20)} ${esc(tn(p.team_id))} — <b style="color:var(--gold)">${fmt(p.sold_price)}</b></div>`).join("")||"<small>No sales</small>"}</div>
+ <div class=card style="margin-top:12px"><h3>Final squads & spending</h3><div class=tw><table><tr><th>Team</th><th>Players</th><th>Spent</th><th>Purse left</th><th>Top buy</th></tr>${S.teams.map(t=>{const b=tbuy(t);return `<tr><td>${teamLogo(t,24)} ${esc(t.name)}</td><td>${t.squad_count}/${t.max_squad}</td><td>${fmt(t.spent)}</td><td>${fmt(t.purse-t.spent)}</td><td>${b?esc(b.name)+" · "+fmt(b.sold_price):"—"}</td></tr>`}).join("")}</table></div></div>
+ <div class=card style="margin-top:12px"><h3>Auction highlights</h3>${L.map(x=>`<span class=ach><b>${x.i}</b> ${esc(x.t)}<small>${esc(x.s)} · ${esc(x.d)}</small></span>`).join("")||"<small>—</small>"}</div>
+ <div class=card style="margin-top:12px"><h3>Squads</h3>${S.teams.map(t=>`<details><summary>${teamLogo(t,22)} <b>${esc(t.name)}</b></summary>${squad(ps.filter(p=>p.team_id===t.id&&p.status==="Sold"))}</details>`).join("")}</div>
+ <p style="text-align:center"><a class="btn g" href=awards.html>🏅 All awards</a> <a class="btn s" href=results.html>Results</a></p></div>`);
+ if(!finShown){finShown=true;confetti(["#F5C518","#00A86B","#FFFFFF","#39D353"],230);setTimeout(()=>confetti(["#F5C518","#FFFFFF"],170),800);play("celebrate");setTimeout(()=>play("applause"),1900);burst(["👏","🎉","🏆"])}}
+fin.onclick=e=>{if(e.target.id==="finx"){finClosed=true;fin.classList.remove("show")}};
+function draw(){sp();sndLabel();const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player_id),ps=S.players;gate.classList.toggle("show",!on("audience_on"));
+ const hist=[...S.history].sort((x,y)=>new Date(y.at)-new Date(x.at)).slice(0,20),idle=!p||!a.state||a.state==="idle"||a.state==="complete",revNow=!!(p&&a.reveal_until&&Date.now()<a.reveal_until&&["live","paused"].includes(a.state));revFlag=revNow;
+ const asc=S.bids.filter(b=>b.player_id===a.player_id).sort((x,y)=>x.id-y.id),lt=asc.slice(-4).map(b=>b.team_id),war=a.state==="live"&&lt.length===4&&new Set(lt).size===2&&lt.every((t,i)=>i===0||t!==lt[i-1]);
+ const record=Math.max(0,...S.history.filter(h=>h.status==="Sold"&&h.player_id!==a.player_id).map(h=>h.price||0)),HT=TM(a.bid_team_id),prev=asc.length>=2?asc[asc.length-2].amount:(asc.length===1?p?.base_price:0);
+ const hasTimer=!idle&&!revNow&&["live","paused"].includes(a.state)&&(a.timer_end!=null||a.remaining_ms!=null);
+ put(cur,idle?`<div style="text-align:center"><h2>${a.state==="complete"?"Auction complete":"Auction starts soon"}</h2><div class=big id=cd></div><div style="margin:12px auto;width:170px;background:#fff;padding:8px;border-radius:10px">${qrSvg}</div><small>Scan to open the audience screen on your phone</small></div>`:
+  revNow?`<div class=mys><div><div class=qm>?</div><h2>NEXT PLAYER…</h2><small>Revealing in a moment</small></div></div>`:
+  `<div class="stage ${war?"war":""}" style="${themeStyle(HT)}"><div><img class=ph0 src="${esc(p.image||ph)}" onerror="this.src='${ph}'" alt=""></div><div><span class="badge ${esc(p.status)}">${p.status==="Live"?"ON THE BLOCK":esc(p.status)}</span>${p.accel?' <span class=badge style="background:var(--gold);color:#031B18">⚡ ACCELERATED ROUND</span>':""} ${foreign(p)?"✈️":""}<h1 style="margin:.2em 0">${esc(p.name)}</h1><div>${esc(p.country)} · ${esc(p.role)}</div><small>${esc(p.bat)} ${p.bowl?"· "+esc(p.bowl):""} · Base ${fmt(p.base_price)}${p.accel&&p.orig_base?" (was "+fmt(p.orig_base)+")":""}</small>
+  ${asc.length?`<div><small>Previous</small> <s style="color:var(--m)">${fmt(prev)}</s> <small>→ new</small></div>`:""}<div class=big>${fmt(a.current_bid||p.base_price)}</div>
+  ${HT?`<div class=hb style="display:inline-flex;align-items:center;gap:10px;background:var(--tp);color:var(--tpt);padding:5px 16px;border-radius:10px">${teamLogo(HT,34)} <b>${esc(HT.name)}</b></div>`:'<div class=hb>Waiting for first bid</div>'}
+  ${a.state==="live"&&record>0&&a.current_bid>record?'<div style="color:var(--gold)">💥 New record price!</div>':""}${war?`<div class=call style="font-size:1.2em">🔥 BIDDING WAR: ${esc(tn(lt[3]))} vs ${esc(tn(lt[2]))}</div>`:""}
+  ${a.state==="live"&&a.callout?`<h1 class=call>GOING ${esc(a.callout.toUpperCase())}…</h1>`:""}
+  ${a.state==="sold"?`<h2 style="color:var(--g)">SOLD to ${esc(tn(a.bid_team_id))}</h2>`:a.state==="unsold"?'<h2 style="color:var(--r)">UNSOLD</h2>':a.state==="paused"?(a.timeout_by?`<h2 class=call>⏸ TIME-OUT · ${esc(tn(a.timeout_by))}</h2>`:"<h3>⏸ Paused</h3>"):""}</div>
+  <div>${hasTimer?`<div class=ringw><svg viewBox="0 0 100 100"><circle class=rbg cx=50 cy=50 r=44></circle><circle id=rfg cx=50 cy=50 r=44 stroke-dasharray=276.46 stroke-dashoffset=0 transform="rotate(-90 50 50)"></circle></svg><div id=tmr></div></div>`:""}</div></div>`);
+ const an=S.announcement[0]?.text||"";ann.style.display=an?"block":"none";ann.textContent="📢 "+an;document.body.classList.toggle("alarm",!!(a.state==="live"&&a.callout));
+ if(a.callout&&a.callout!==lastCall&&a.state==="live")play("warn");lastCall=a.callout;
+ if(a.timeout_by&&a.timeout_by!==lastTO&&a.state==="paused")play("war");lastTO=a.state==="paused"?a.timeout_by:null;
+ const wk=war?a.player_id+":"+[...new Set(lt)].sort().join(""):"";if(war&&wk!==lastWar)play("war");lastWar=wk;
+ if(a.player_id!==lastPid){lastPid=a.player_id;counts=[];pull2();cur.classList.remove("enter");void cur.offsetWidth;cur.classList.add("enter");if(revNow&&lastRevPid!==a.player_id){lastRevPid=a.player_id;play("reveal")}}
+ const key=a.player_id+"|"+a.current_bid;if(lastBid&&key!==lastBid&&a.state==="live"&&!revNow){play("bid");const bg=document.querySelector("#cur .big"),hb=document.querySelector("#cur .hb");if(bg){bg.classList.remove("pop");void bg.offsetWidth;bg.classList.add("pop");if(prevBidPid===a.player_id&&a.current_bid>prevBidVal)countUp(bg,prevBidVal,a.current_bid,450,fmt)}if(hb){hb.classList.remove("flash");void hb.offsetWidth;hb.classList.add("flash")}}prevBidVal=a.current_bid;prevBidPid=a.player_id;lastBid=key;
+ if(last===null)last=a.state==="sold"?a.player_id:"";
+ else if(a.state==="sold"&&a.player_id!==last&&p){last=a.player_id;const t=TM(a.bid_team_id),k=themeOf(t),bp=p.base_price,tag=record>0&&a.current_bid>record?"💥 RECORD BUY!":a.current_bid>=bp*2?"💸 BIG SPENDER!":(bp>=22000000&&a.current_bid<=bp*1.1)?"💎 STEAL!":"";
+  rb2.textContent=tag;scw.innerHTML=soldCard({...p,sold_price:a.current_bid},t,{bids:asc.length})+(t?`<p style="margin-top:10px">Remaining purse: <b style="color:var(--gold)">${fmt(t.purse-t.spent)}</b> · Squad ${t.squad_count}/${t.max_squad}</p>`:"");
+  soldt.textContent="SOLD!";soldt.style.color="";sold.className="show";confetti([k.p,k.a,"#F5C518","#FFFFFF"]);play("sold");setTimeout(()=>play(tag.includes("RECORD")?"celebrate":"applause"),1900);burst(["👏","🎉"]);setTimeout(()=>sold.className="",7000)}
+ if(lastUn===null)lastUn=a.state==="unsold"?a.player_id:"";else if(a.state==="unsold"&&a.player_id!==lastUn&&p){lastUn=a.player_id;soldt.textContent="UNSOLD";soldt.style.color="var(--r)";rb2.textContent="";scw.innerHTML=`<div class=card style="max-width:520px;margin:auto"><img class=sc-p style="width:140px;height:140px;margin:auto;display:block;filter:grayscale(1)" src="${esc(p.image||ph)}" onerror="this.src='${ph}'" alt=""><h2>${esc(p.name)}</h2><small>${esc(p.role||"")} · ${esc(p.country||"")} · Base ${fmt(p.base_price)}</small></div>`;sold.className="show";play("unsold");setTimeout(()=>sold.className="",4000)}
+ put(tkb,on("ticker_on")?tickerHtml(a,war,lt):"");tkb.style.display=on("ticker_on")?"flex":"none";
+ put(tk,asc.slice(-8).reverse().map(b=>`<div>${teamLogo(TM(b.team_id),20)} ${esc(tn(b.team_id))} — <b>${fmt(b.amount)}</b> ${b.late?"⏱":""} <small>${new Date(b.at).toLocaleTimeString()}</small></div>`).join("")||"<small>No bids yet</small>");
+ const lines=asc.map((b,i)=>{const t=tn(b.team_id),pv=asc[i-1],pv2=asc[i-2];return !pv?`${t} opens the bidding at ${fmt(b.amount)}`:b.amount>=pv.amount*1.15?`${t} makes a statement bid – ${fmt(b.amount)}!`:pv2&&pv2.team_id===b.team_id?`${t} hits back with ${fmt(b.amount)}`:`${t} jumps in at ${fmt(b.amount)}`});if(a.state==="sold"&&p)lines.push(`🔨 SOLD! ${p.name} goes to ${tn(a.bid_team_id)} for ${fmt(a.current_bid)}`);
+ put(cm,lines.slice(-6).reverse().map(l=>`<div>${esc(l)}</div>`).join("")||"<small>Waiting for action…</small>");
+ put(rec,`<table><tr><th>Player</th><th>Team</th><th>Price</th></tr>${hist.map(h=>`<tr><td>${esc(h.name)}</td><td>${esc(h.team||"—")}</td><td>${h.status==="Unsold"?"UNSOLD":fmt(h.price)+(h.status!=="Sold"?" ("+esc(h.status)+")":"")}</td></tr>`).join("")||"<tr><td colspan=3>None yet</td></tr>"}</table>`);
+ put(up,ps.filter(x=>["Upcoming","Available"].includes(x.status)).sort((x,y)=>x.id.localeCompare(y.id,undefined,{numeric:true})).slice(0,12).map(x=>`<span class=badge style="margin:2px;display:inline-block">${esc(x.name)}</span>`).join("")||"—");
+ const sd=ps.filter(x=>x.status==="Sold"&&!x.acq),topb=[...sd].sort((x,y)=>y.sold_price-x.sold_price);
+ put(document.getElementById("top"),topb.slice(0,5).map((x,i)=>`<div>${i+1}. ${esc(x.name)}${foreign(x)?" ✈️":""} <small>${esc(tn(x.team_id))}</small> — <b>${fmt(x.sold_price)}</b></div>`).join("")||"<small>No sales yet</small>");
+ put(st,`Players: <b>${ps.length}</b><br>Sold: <b>${sd.length}</b> · Unsold: <b>${ps.filter(x=>x.status==="Unsold").length}</b><br>Average: <b>${fmt(sd.length?Math.round(sd.reduce((s,x)=>s+x.sold_price,0)/sd.length):0)}</b>`);
+ put(sqb,S.teams.map(t=>{const q=ps.filter(x=>x.team_id===t.id&&x.status==="Sold");return `<details data-t="${t.id}" ${openT.has(t.id)?"open":""}><summary>${teamLogo(t,22)} <b>${esc(t.name)}</b> <small>${q.length}/${t.max_squad} players · left ${fmt(t.purse-t.spent)}</small></summary>${balance(q,S.rules)}${squad(q)}</details>`}).join(""));
+ const real=ps.filter(x=>!x.acq),done=real.filter(x=>x.status==="Sold"||x.status==="Unsold").length,nx=ps.filter(x=>["Available","Upcoming"].includes(x.status)&&x.id!==a.player_id).sort((u,v)=>u.id.localeCompare(v.id,undefined,{numeric:true}))[0];
+ put(prog,`<div class=row style="justify-content:space-between"><b>Auction progress</b><small>${done} of ${real.length} players auctioned</small></div><div class=prog><i style="width:${real.length?Math.round(done*100/real.length):0}%"></i></div>${nx?`<div style="margin-top:10px"><small>Next up</small> <b>${esc(nx.name)}</b> <small>${esc(nx.role||"")} · ${esc(nx.country||"")}${foreign(nx)?" ✈️":""} · Base ${fmt(nx.base_price)}</small></div>`:""}`);
+ rxDraw();fzDraw();achDraw();finDraw();drawPred()}
+setInterval(()=>{const a=S.auction[0]||{},cd=document.getElementById("cd");
+ if(cd){const s=S.announcement[0]?.starts_at,r=s?new Date(s)-Date.now():null;cd.textContent=r==null?"":r>0?`${Math.floor(r/3600000)}h ${Math.floor(r%3600000/60000)}m ${Math.floor(r%60000/1000)}s`:"Starting now…"}
+ if(revFlag&&a.reveal_until&&Date.now()>=a.reveal_until){revFlag=false;draw();return}
+ const e=document.getElementById("tmr"),rf=document.getElementById("rfg");if(!e)return;
+ const rem=a.state==="live"?(a.timer_end==null?null:a.timer_end-Date.now()):a.state==="paused"?a.remaining_ms:null;
+ if(rem==null){e.textContent="";return}
+ const len=(a.timer_len||60)*1000,fr=Math.max(0,Math.min(1,rem/len)),s=Math.max(0,Math.ceil(rem/1000));e.textContent=rem<=0&&a.state==="live"?"TIME!":s;e.style.color=rem<=5000?"var(--r)":"";
+ if(rf){rf.style.strokeDashoffset=276.46*(1-fr);rf.style.stroke=rem<=5000?"var(--r)":""}
+ if(a.state==="live"&&rem>0&&rem<=5000){if(s!==lastSec){lastSec=s;play("warn")}}else lastSec=null},250);
+</script></body></html>
