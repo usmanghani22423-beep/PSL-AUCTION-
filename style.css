@@ -26,7 +26,7 @@ button,a.btn{background:var(--g);border:0;cursor:pointer;font-weight:600;color:#
 button:hover,a.btn:hover{filter:brightness(1.12)}button:disabled{opacity:.5;cursor:not-allowed;filter:none}button.s,a.btn.s{background:var(--bd)}button.d{background:var(--r)}button.g,a.btn.g{background:var(--gold);color:#101820}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center}
 .app{display:flex;min-height:calc(100vh - 52px)}nav{width:200px;background:var(--bg2);display:flex;flex-direction:column;padding:10px;gap:4px;border-right:1px solid var(--bd)}
-nav button{background:none;text-align:left;color:var(--m);white-space:nowrap}nav button.on{background:var(--gold);color:#101820}main{flex:1;padding:16px;min-width:0}
+nav button{background:none;text-align:left;color:#000;white-space:nowrap}nav button.on{background:var(--gold);color:#000}main{flex:1;padding:16px;min-width:0}
 #sold{position:fixed;inset:0;display:none;place-items:center;background:rgba(16,24,32,.94);z-index:50;text-align:center;overflow:auto;padding:16px}#sold.show{display:grid}
 .soldh{font-size:min(16vw,6em);color:var(--g);margin:0 0 8px;letter-spacing:4px;animation:pop .5s ease-out}@keyframes pop{from{transform:scale(.6);opacity:0}}
 #toast{position:fixed;bottom:16px;right:16px;background:var(--g);padding:10px 16px;border-radius:8px;display:none;z-index:60}#toast.show{display:block}#toast.bad{background:var(--r)}
@@ -61,3 +61,10 @@ body.teampage button.bb,body.teampage #bidgo{background:var(--tp);color:var(--tp
 @media(max-width:800px){.grid{grid-template-columns:1fr}.app{flex-direction:column}nav{flex-direction:row!important;overflow:auto;width:100%!important;border-right:0}.wrap{padding:10px}main{padding:10px}.hero{flex-direction:column;text-align:center}.hero img{width:130px;height:130px}.price{font-size:2em}.top{padding:10px 12px}button,select,input,a.btn{min-height:42px}.cards{grid-template-columns:repeat(2,1fr)}th,td{padding:6px 4px}.sc-b{flex-direction:column;text-align:center}.sc-t{justify-content:center}.sgrid{grid-template-columns:1fr}}
 @media(min-width:1500px){body.live .wrap{max-width:1750px}body.live .big{font-size:5em}}
 @media print{.top,.nav,nav,button,#toast,a.btn,.foot{display:none!important}body{background:#fff;color:#000}.card,.td,.sc,.pc{background:#fff;color:#000;border:1px solid #999}small,th{color:#444}.badge{background:#ddd;color:#000}}
+
+/* ===== Sidebar text -> black (override, text only) ===== */
+nav button,
+nav button.on,
+nav button span,
+nav a,
+nav a span{color:#000!important}
