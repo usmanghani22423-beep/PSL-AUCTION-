@@ -48,10 +48,10 @@ body.aud{padding-bottom:48px}.stage{display:grid;grid-template-columns:260px 1fr
 <p><a href=awards.html>🏅 Awards &amp; stats</a> · <a href=results.html>Results</a></p></div>
 <button id=snd class=g>🔊 Tap to enable sound</button>
 <div class=tkb id=tkb></div><div id=foot-root></div>
-<script type=module>import {sb,fmt,esc,ph,sync,squad,foreign,balance,mountNav,mountFooter,teamLogo,themeStyle,themeOf,soldCard,confetti,countUp,splash,cat,rv,pslLogo} from "./lib.js";
+<script type=module>import {sb,fmt,esc,ph,sync,squad,foreign,balance,addBeams,mountNav,mountFooter,teamLogo,themeStyle,themeOf,soldCard,confetti,countUp,splash,cat,rv,pslLogo} from "./lib.js";
 import {play,unlock,isUnlocked,setSoundConfig} from "./sound.js";
 const TV=new URLSearchParams(location.search).get("tv")==="1";
-if(TV){document.body.classList.add("tv");document.body.insertAdjacentHTML("afterbegin",'<div class=conn2><i id=c class=dot></i><small id=cs></small></div>')}else{mountNav("audience.html");mountFooter();splash()}
+if(TV){addBeams();document.body.classList.add("tv");document.body.insertAdjacentHTML("afterbegin",'<div class=conn2><i id=c class=dot></i><small id=cs></small></div>')}else{mountNav("audience.html");mountFooter();splash()}
 let S={players:[],teams:[],auction:[],history:[],bids:[],announcement:[],rules:[],settings:[],ticker_items:[],reaction_counts:[]},last=null,lastUn=null,lastBid="",lastCall=null,lastPid=null,lastTO=null,lastWar="",lastSec=null,revFlag=false,prevBidVal=0,prevBidPid=null,finClosed=false,finShown=false,seenAch=null,counts=[],board=[],localMute=false,lastRevPid=null;
 const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
 const VID=ls("pv")||(()=>{const v=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());ls("pv",v);return v})();

@@ -57,7 +57,7 @@ export const teamLogo=(t,px=40)=>{if(!t)return"";const sl=slugOf(t),k=themeOf(t)
  const img=sl?`<img src="/assets/teams/${sl}.png" alt="${esc(t.name)} logo"${f} onload="this.parentNode.classList.add('ok')" onerror="if(this.dataset.f){this.src=this.dataset.f;this.dataset.f=''}else this.remove()">`:t.logo?`<img src="${esc(t.logo)}" alt="" onload="this.parentNode.classList.add('ok')" onerror="this.remove()">`:"";
  return `<span class=tl style="width:${px}px;height:${px}px;font-size:${Math.round(px*.38)}px;background:${k.p};color:${onColor(k.p)}">${esc(initials(t.name))}${img}</span>`};
 export const pslLogo=(h=36)=>`<img class=psl-logo-img src="/assets/psl-logo.png" alt="Pakistan Super League logo" style="height:${h}px" onerror="this.style.display='none'">`;
-export function mountNav(active){const el=document.getElementById("nav-root");if(!el)return;
+export function mountNav(active){addBeams();const el=document.getElementById("nav-root");if(!el)return;
  const L=[["index.html","Home"],["audience.html","Live Auction"],["teams.html","Teams"],["players.html","Players"],["results.html","Auction Results"],["stats.html","Statistics"],["about.html","About PSL"]];
  let back="";try{if(/bid\.html$/.test(location.pathname)&&location.search.includes("code="))localStorage.setItem("bidLink",location.pathname+location.search);else back=localStorage.getItem("bidLink")||""}catch(e){}
  el.innerHTML=`<header class=nav><a href="index.html" class=brand>${pslLogo(36)}<span>PSL 2027<small>Mock Auction</small></span></a>${back?`<a class="btn g" href="${esc(back)}" style="margin-left:6px">↩ Live bid</a>`:""}<button class=burger aria-label=Menu onclick="document.querySelector('.nav ul').classList.toggle('open')">☰</button><ul>${L.map(([h,n])=>`<li><a href="${h}" class="${h===active?"on":""}">${n}</a></li>`).join("")}</ul><span class=conn><i id=c class=dot></i><small id=cs></small></span></header>`}
@@ -99,3 +99,4 @@ export async function xiBlob(t,players,xi){const k=themeOf(t),list=xiOrder((xi.p
  x.textAlign="center";x.fillStyle="#A8B8B1";x.font="26px Arial";x.fillText("Mock auction for entertainment",540,1395);
  return new Promise(r=>c.toBlob(r,"image/png"))}
 export async function shareBlob(blob,name,text){const f=new File([blob],name,{type:"image/png"});if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text});return}catch(e){}}const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click()}
+export function addBeams(){if(document.querySelector(".beams"))return;document.body.insertAdjacentHTML("afterbegin","<div class=beams><i></i><i></i></div>")}

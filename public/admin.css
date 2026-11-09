@@ -1,6 +1,6 @@
 /* ===== PSL 2027 Admin – dark-green sports theme (scoped to body.admin; public pages are unaffected) ===== */
 body.admin{--bg:#031B18;--bg2:#062722;--card:#0B3029;--side:#071F1C;--g:#00A86B;--g2:#39D353;--gold:#F5C518;--t:#F4F7F5;--m:#A8B8B1;--bd:#174C3D;--r:#D9534F;
- background:var(--bg);color:var(--t);font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif}
+ background:rgba(3,27,24,var(--dim,.86));color:var(--t);font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif}
 .i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 /* header */
 body.admin .ahead{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 22px;background:var(--bg2);border-bottom:1px solid var(--bd)}
@@ -84,3 +84,30 @@ body.admin .ph{border-bottom:2px solid;border-image:linear-gradient(90deg,#00A86
 body.admin .ph .i{color:#F5C518}
 body.admin .cardh .i{color:#F5C518}
 body.admin .livestrip{background:linear-gradient(90deg,#1B4A2E,#4B3806)}
+
+/* ===== sidebar: black text on light pills ===== */
+body.admin nav{gap:7px}
+body.admin nav button{background:#E4F3EB;color:#0A0F0D;font-weight:600;animation:navin .45s both}
+body.admin nav button .i{color:#0B6B47!important}
+body.admin nav button:hover{background:#FFFFFF;color:#000}
+body.admin nav button.on{background:var(--gold);color:#000}
+body.admin nav button.on .i{color:#000!important}
+@keyframes navin{from{opacity:0;transform:translateX(-16px)}}
+body.admin nav button:nth-child(1){animation-delay:0.035s}
+body.admin nav button:nth-child(2){animation-delay:0.07s}
+body.admin nav button:nth-child(3){animation-delay:0.105s}
+body.admin nav button:nth-child(4){animation-delay:0.14s}
+body.admin nav button:nth-child(5){animation-delay:0.175s}
+body.admin nav button:nth-child(6){animation-delay:0.21s}
+body.admin nav button:nth-child(7){animation-delay:0.245s}
+body.admin nav button:nth-child(8){animation-delay:0.28s}
+body.admin nav button:nth-child(9){animation-delay:0.315s}
+body.admin nav button:nth-child(10){animation-delay:0.35s}
+body.admin nav button:nth-child(11){animation-delay:0.385s}
+body.admin nav button:nth-child(12){animation-delay:0.42s}
+body.admin nav button:nth-child(13){animation-delay:0.455s}
+body.admin nav button:nth-child(14){animation-delay:0.49s}
+body.admin nav button:nth-child(15){animation-delay:0.525s}
+body.admin nav button:nth-child(16){animation-delay:0.56s}
+body.admin nav button:nth-child(17){animation-delay:0.595s}
+body.admin nav button:nth-child(18){animation-delay:0.63s}

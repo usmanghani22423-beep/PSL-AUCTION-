@@ -1,5 +1,6 @@
 :root{--bg:#031B18;--bg2:#062722;--card:#0B3029;--side:#071F1C;--t:#F4F7F5;--m:#A8B8B1;--gold:#F5C518;--g:#00A86B;--g2:#39D353;--r:#D9534F;--bd:#174C3D}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:rgba(3,27,24,var(--dim,.86));color:var(--t);min-height:100vh}
+html{background:#031B18 url("/assets/stadium.jpg") center/cover fixed no-repeat}
 h1,h2,h3{margin:.3em 0}a{color:var(--gold)}small{color:var(--m)}img{max-width:100%}
 .psl-logo{background-image:url('/assets/psl-logo.png');background-repeat:no-repeat;background-position:center;background-size:contain}
 .psl-logo-img{display:inline-block;vertical-align:middle;object-fit:contain}
@@ -75,3 +76,13 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;bac
 #scw .sc{animation:slam .55s ease-out}@keyframes slam{0%{transform:scale(1.7) rotate(-4deg);opacity:0}60%{transform:scale(.96)}100%{transform:scale(1);opacity:1}}
 body.alarm::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;box-shadow:inset 0 0 130px rgba(217,83,79,.6);animation:alarm .7s infinite alternate}@keyframes alarm{from{opacity:.35}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+/* ---- floodlight beams, staggered entrance, pulses ---- */
+.beams{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.beams i{position:absolute;top:-25%;width:32vmax;height:150%;background:linear-gradient(180deg,rgba(255,255,225,.11),transparent 72%);filter:blur(9px);transform-origin:top center}
+.beams i:nth-child(1){left:6%;animation:swayA 15s ease-in-out infinite alternate}.beams i:nth-child(2){right:6%;animation:swayB 17s ease-in-out infinite alternate}
+@keyframes swayA{from{opacity:.3;transform:rotate(12deg)}to{opacity:.85;transform:rotate(24deg)}}@keyframes swayB{from{opacity:.3;transform:rotate(-12deg)}to{opacity:.85;transform:rotate(-24deg)}}
+.wrap>*,main>*{animation:rise .55s both}.wrap>*:nth-child(2),main>*:nth-child(2){animation-delay:.07s}.wrap>*:nth-child(3),main>*:nth-child(3){animation-delay:.14s}.wrap>*:nth-child(4),main>*:nth-child(4){animation-delay:.21s}.wrap>*:nth-child(5),main>*:nth-child(5){animation-delay:.28s}.wrap>*:nth-child(n+6),main>*:nth-child(n+6){animation-delay:.35s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.dot.on{animation:dotp 2s infinite}@keyframes dotp{0%{box-shadow:0 0 0 0 rgba(0,168,107,.65)}70%,100%{box-shadow:0 0 0 7px rgba(0,168,107,0)}}
+.badge.Live{animation:livep 1.6s ease-in-out infinite}@keyframes livep{50%{box-shadow:0 0 0 5px rgba(245,197,24,.0);filter:brightness(1.25)}0%{box-shadow:0 0 0 0 rgba(245,197,24,.6)}}
