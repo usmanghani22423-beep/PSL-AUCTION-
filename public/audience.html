@@ -43,6 +43,7 @@ body.aud{padding-bottom:48px}.stage{display:grid;grid-template-columns:260px 1fr
  <div class=card style="margin-top:16px"><h3>Top buys</h3><div id=top></div></div>
  <div class=card style="margin-top:16px"><h3>Statistics</h3><div id=st></div></div>
 </div></div>
+<div class=card style="margin-top:16px"><h3>📋 Playing XIs</h3><small>Teams appear here once they submit their XI.</small><div id=xis class=fzg style="margin-top:10px"></div></div>
 <div class=card style="margin-top:16px"><h3>🏟 Team Fan Zone &amp; live rankings</h3><small>💰 highest spender · 🛒 most purchases · 🏦 most purse left</small><div class=fzg id=fz style="margin-top:10px"></div></div>
 <div class=card style="margin-top:16px"><h3>Team squads</h3><div id=sqb></div></div>
 <p><a href=awards.html>🏅 Awards &amp; stats</a> · <a href=results.html>Results</a></p></div>
@@ -83,7 +84,7 @@ function drawPred(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player
 pr.onclick=async e=>{const b=e.target.closest("[data-t]"),a=S.auction[0]||{};if(!b||a.state!=="live")return;let n=ls("pn");if(!n){n=prompt("Your name for the predictor leaderboard")||"Guest";ls("pn",n)}
  const {error}=await sb.rpc("predict",{p_player:a.player_id,p_team:b.dataset.t,p_voter:VID,p_name:n});if(error)return alert(error.message);ls("pk_"+a.player_id,b.dataset.t);pull2()};
 const openT=new Set();sqb.addEventListener("toggle",e=>{const t=e.target.dataset?.t;if(t)e.target.open?openT.add(t):openT.delete(t)},true);
-sync(["players","teams","auction","history","bids","announcement","rules","settings","ticker_items","reaction_counts"],o=>{Object.assign(S,o);draw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+sync(["players","teams","auction","history","bids","announcement","rules","settings","ticker_items","reaction_counts","final_xi"],o=>{Object.assign(S,o);draw();xisDraw()},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
 // instant switch changes from the admin (broadcast) + a light safety poll
 sb.channel("ctl").on("broadcast",{event:"cfg"},p=>{const {key,val}=p.payload||{};if(!key)return;OV[key]={val,t:Date.now()};draw()}).subscribe();
 let setSig="";setInterval(async()=>{try{const {data}=await sb.from("settings").select("*");if(!data)return;const sig=JSON.stringify(data);if(sig!==setSig){setSig=sig;S.settings=data;draw()}}catch(e){}},3000);
@@ -105,6 +106,8 @@ function achDraw(){const L=achievements();const ids=new Set(L.map(x=>x.id));
  if(seenAch===null)seenAch=ids;else L.filter(x=>!seenAch.has(x.id)).forEach(x=>{seenAch.add(x.id);const d=document.createElement("div");d.className="achp";d.innerHTML=`<b style="font-size:1.4em">${x.i}</b> <b>${esc(x.t)}</b><br><small>${esc(x.s)} · ${esc(x.d)}</small>`;achp.appendChild(d);setTimeout(()=>d.remove(),4800)});
  put(ac,[...L].reverse().slice(0,12).map(x=>`<span class=ach><b>${x.i}</b> ${esc(x.t)}<small>${esc(x.s)} · ${esc(x.d)}</small></span>`).join("")||"<small>Achievements appear as milestones are reached</small>")}
 // fan zone (stable DOM so bars animate)
+import {xiOrder as _xo,teamLogo as _tl,foreign as _fo,esc as _es} from "./lib.js";
+function xisDraw(){const el=document.getElementById("xis");if(!el)return;const h=(S.teams||[]).map(t=>{const x=(S.final_xi||[]).find(f=>f.team_id===t.id),l=x?_xo(x.player_ids.map(id=>(S.players||[]).find(p=>p.id===id)).filter(Boolean)):[];return l.length?`<div class=card style="${themeStyle(t)}"><div class=row>${_tl(t,32)}<b>${_es(t.name)}</b></div>${l.map((p,i)=>`<div><small>${i+1}.</small> ${_es(p.name)}${p.id===x.captain?" <b>(C)</b>":""}${_fo(p)?" ✈️":""}</div>`).join("")}</div>`:""}).join("");if(el.dataset.h!==h){el.dataset.h=h;el.innerHTML=h||"<small>No Playing XI submitted yet</small>"}}
 function fzDraw(){const T=S.teams,key=T.map(t=>t.id).join(",");if(fz.dataset.k!==key){fz.innerHTML=T.map(t=>`<div class=fzc data-t="${t.id}" style="${themeStyle(t)}"><div class=fzh>${teamLogo(t,48)}<div><b>${esc(t.name)}</b><small class=fzr></small></div><span class=rk></span></div><div class=fzs><div><small>Players</small><b class=fzp></b></div><div><small>Spent</small><b class=fzsp></b></div><div><small>Purse left</small><b class=fzl></b></div></div><small>Squad</small><div class=rt><i class=rb2 data-k=sq></i></div><small>Purse left</small><div class=rt><i class=rb2 data-k=pu></i></div></div>`).join("");fz.dataset.k=key}
  const cnt=t=>S.players.filter(p=>p.team_id===t.id&&p.status==="Sold"&&!p.acq).length,hs=[...T].sort((a,b)=>b.spent-a.spent)[0],mp=[...T].sort((a,b)=>cnt(b)-cnt(a))[0],ml=[...T].sort((a,b)=>(b.purse-b.spent)-(a.purse-a.spent))[0],rank=[...T].sort((a,b)=>b.spent-a.spent).map(t=>t.id);
  T.forEach(t=>{const el=fz.querySelector(`[data-t="${t.id}"]`);if(!el)return;const left=t.purse-t.spent;
