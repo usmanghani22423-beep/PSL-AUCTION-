@@ -9,7 +9,7 @@ let S={players:[],teams:[],auction:[],bid_rules:[],announcement:[],rules:[],fina
 const toast=(m,b)=>{const t=document.getElementById("toast");t.textContent=m;t.className="show"+(b?" bad":"");setTimeout(()=>t.className="",4000)};
 (async()=>{await 0;if(!TEAM||!CODE){valid=false;draw();return}const {data}=await sb.rpc("check_team",{p_team:TEAM,p_code:CODE});valid=!!data;if(!valid)try{localStorage.removeItem("bidSess")}catch(e){}draw()})();
 // expired / replaced session during the auction -> back to login
-{const r0=sb.rpc.bind(sb);sb.rpc=async(...a)=>{const r=await r0(...a);if(r&&r.error&&/Invalid team link/.test(r.error.message||"")&&a[0]!=="check_team"){try{localStorage.removeItem("bidSess")}catch(e){}toast("Session ended – please log in again",1);setTimeout(()=>location.reload(),1500)}return r}}
+{const r0=sb.rpc.bind(sb);sb.rpc=async(...a)=>{const r=await r0(...a);if(TEAM&&CODE&&r&&r.error&&/Invalid team link/.test(r.error.message||"")&&a[0]!=="check_team"){try{localStorage.removeItem("bidSess")}catch(e){}toast("Session ended – please log in again",1);setTimeout(()=>location.reload(),1500)}return r}}
 const doLogin=async()=>{const un=document.getElementById("lu").value.trim(),pw=document.getElementById("lp").value,m=document.getElementById("lm");if(!un||!pw){m.textContent="Enter username and password";return}
  m.textContent="Signing in…";const {data,error}=await sb.rpc("team_login",{p_username:un,p_password:pw});if(error||!data||data.error){m.textContent=(error&&error.message)||(data&&data.error)||"Login failed";return}
  try{localStorage.setItem("bidSess",JSON.stringify({team:data.team_id,token:data.token}))}catch(e){m.textContent="Browser storage is blocked";return}location.reload()};
@@ -51,7 +51,7 @@ function xiDraw(){const t=S.teams.find(x=>x.id===TEAM);if(!t)return;const mine=x
 xic.onchange=e=>{const id=e.target.dataset.x,c=e.target.dataset.c;if(id){if(e.target.checked){if(XI.size>=11){e.target.checked=false;return toast("Maximum 11 players",1)}XI.add(id)}else XI.delete(id)}if(c)CAP=c;xiDraw()};
 xic.onclick=async e=>{const t=S.teams.find(x=>x.id===TEAM);if(e.target.id==="xiSave"){const {error}=await sb.rpc("save_xi",{p_team:TEAM,p_code:CODE,p_ids:[...XI],p_captain:CAP||""});error?toast(error.message,1):toast("Playing XI saved")}
  if(e.target.id==="xiDl"&&t){const b=await xiBlob(t,S.players,{player_ids:[...XI],captain:CAP});shareBlob(b,"playing-xi.png",t.name+" – Playing XI")}};
-setTimeout(pwLeft,600);
+if(TEAM&&CODE)setTimeout(pwLeft,600);
 function wdraw(){const m=id=>S.players.find(p=>p.id===id);put(wl,WL.map(m).filter(Boolean).map(p=>`<div>⭐ ${esc(p.name)} <small>${esc(p.role)} · ${fmt(p.base_price)} · ${esc(p.status)}</small> <button class=s data-rm="${esc(p.id)}" style="padding:2px 8px;min-height:0">✕</button></div>`).join("")||"<small>Empty</small>");
  put(wlopts,S.players.filter(p=>p.status!=="Sold"&&!WL.includes(p.id)).map(p=>`<option value="${esc(p.name+" · "+p.id)}">`).join(""))}
 wlad.onclick=()=>{const p=S.players.find(x=>x.name+" · "+x.id===wlin.value);if(!p)return toast("Pick a player from the list",1);if(!WL.includes(p.id)){WL.push(p.id);try{localStorage.setItem(WK,JSON.stringify(WL))}catch(e){}}wlin.value="";wdraw()};
