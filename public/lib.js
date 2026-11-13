@@ -15,8 +15,12 @@ export function sync(tables,apply,st){const store={};let tm;let due=Infinity;con
  const ch=sb.channel("rt"+Math.random());
  tables.forEach(t=>ch.on("postgres_changes",{event:"*",schema:"public",table:t},p=>{const k=PK[t],rows=store[t]||(store[t]=[]);
   if(p.eventType==="DELETE"){const id=p.old[k];store[t]=rows.filter(r=>r[k]!==id)}
-  else{const i=rows.findIndex(r=>r[k]===p.new[k]);i>=0?rows[i]=p.new:rows.push(p.new)}sched(t==="auction"||t==="bids"?0:100)}));
+  else{const i=rows.findIndex(r=>r[k]===p.new[k]);i>=0?rows[i]={...rows[i],...p.new}:rows.push(p.new)}sched(t==="auction"||t==="bids"?0:100)}));
  ch.subscribe(x=>{const ok=x==="SUBSCRIBED";st&&st(ok);if(ok)full().catch(e=>console.error(e))});
+ // Safety net: realtime events can be missed (sleep, weak network). Light polling re-syncs the key tables when something changed.
+ const sig={},poll=async(t,cols)=>{if(document.hidden||!store[t])return;try{const {data}=await sb.from(t).select(cols);if(!data)return;const j=JSON.stringify(data);if(sig[t]===j)return;sig[t]=j;if(t==="players"){data.forEach(d=>{const r=store.players.find(x=>x.id===d.id);r?Object.assign(r,d):store.players.push(d)})}else store[t]=data;sched(0)}catch(e){}};
+ setInterval(()=>{if(tables.includes("auction"))poll("auction","*")},3000);
+ setInterval(()=>{if(tables.includes("players"))poll("players","id,status,team_id,sold_price,accel,base_price,queue");if(tables.includes("teams"))poll("teams","*");if(tables.includes("final_xi"))poll("final_xi","*")},8000);
  return {ch,set(t,rows){store[t]=rows;sched()}}}
 
 export const foreign=p=>{const c=String(p.country||"").trim().toLowerCase();return !!c&&c!=="pakistan"};
