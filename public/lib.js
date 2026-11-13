@@ -8,7 +8,7 @@ export async function loadAll(tables){const o={};await Promise.all(tables.map(as
 export function watch(tables,cb,st){const ch=sb.channel("rt"+Math.random());tables.forEach(t=>ch.on("postgres_changes",{event:"*",schema:"public",table:t},cb));
  ch.subscribe(s=>{const ok=s==="SUBSCRIBED";st&&st(ok);if(ok)cb()});return ch}
 
-const PK={players:"id",teams:"id",history:"player_id",bids:"id",notifications:"player_id",team_contacts:"team_id",auction:"id",bid_rules:"min_price",rules:"key",announcement:"id",final_xi:"team_id"};
+const PK={players:"id",teams:"id",history:"player_id",bids:"id",notifications:"player_id",team_contacts:"team_id",auction:"id",bid_rules:"min_price",rules:"key",announcement:"id",final_xi:"team_id",activity:"id"};
 // Row-level realtime store: applies INSERT/UPDATE/DELETE events directly (no refetch), full reload on every (re)connect.
 export function sync(tables,apply,st){const store={};let tm;let due=Infinity;const sched=(ms=100)=>{const at=Date.now()+ms;if(at>=due)return;due=at;clearTimeout(tm);tm=setTimeout(()=>{due=Infinity;apply(store)},ms)};
  const full=async()=>{const o=await loadAll(tables);tables.forEach(t=>store[t]=o[t]);apply(store)};
