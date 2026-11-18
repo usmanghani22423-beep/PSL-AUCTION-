@@ -4,7 +4,7 @@ export const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 export const fmt=n=>"Rs. "+Number(n||0).toLocaleString("en-PK");
 export const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 export const ph="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#062722"/><circle cx="100" cy="75" r="35" fill="#174C3D"/><rect x="45" y="120" width="110" height="80" rx="40" fill="#174C3D"/></svg>');
-export async function loadAll(tables){const o={};await Promise.all(tables.map(async t=>{const {data,error}=await sb.from(t).select("*");if(error)throw error;o[t]=data}));return o}
+export async function loadAll(tables){const o={};await Promise.all(tables.map(async t=>{let all=[],from=0;for(;;){let q=sb.from(t).select("*");const k=PK[t];if(k)q=q.order(k);const {data,error}=await q.range(from,from+999);if(error)throw error;all=all.concat(data);if(data.length<1000)break;from+=1000}o[t]=all}));return o}
 export function watch(tables,cb,st){const ch=sb.channel("rt"+Math.random());tables.forEach(t=>ch.on("postgres_changes",{event:"*",schema:"public",table:t},cb));
  ch.subscribe(s=>{const ok=s==="SUBSCRIBED";st&&st(ok);if(ok)cb()});return ch}
 
