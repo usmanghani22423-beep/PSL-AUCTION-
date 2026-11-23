@@ -138,3 +138,67 @@ export function mountStream(S){
  bar.onpointerdown=e=>{if(e.target.tagName==="BUTTON")return;const r=w.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;bar.setPointerCapture(e.pointerId);ifr.style.pointerEvents="none";
   bar.onpointermove=ev=>{st.x=ev.clientX-dx;st.y=ev.clientY-dy;fit()};bar.onpointerup=()=>{bar.onpointermove=null;bar.onpointerup=null;ifr.style.pointerEvents="";save()}};
 }
+
+// ================= Live chat dock: fan comments + one-at-a-time mic (P2P over Supabase Realtime) =================
+export const ICE={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
+export function dock(bottom){let d=document.getElementById("dock");if(!d){d=document.createElement("div");d.id="dock";d.style.cssText="position:fixed;left:10px;z-index:9997;display:flex;flex-direction:column;gap:8px;width:min(360px,calc(100vw - 20px))";document.body.appendChild(d)}if(bottom!=null)d.style.bottom=bottom+"px";else if(!d.style.bottom)d.style.bottom="10px";return d}
+const setv=(S,k)=>((S.settings||[]).find(x=>x.key===k)||{}).val||"";
+const holderName=(S,h)=>h==="commentary"?"Commentator":((S.teams||[]).find(t=>t.id===h)||{}).name||"Someone";
+
+// --- speaker (a bidder presses "Talk"): returns stop()
+export async function micStart(team,code,onLost){
+ const {data,error}=await sb.rpc("mic_claim",{p_team:team,p_code:code});if(error)throw error;if(!data.ok)throw new Error(data.holder+" is speaking right now");
+ let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}catch(e){await sb.rpc("mic_release",{p_team:team,p_code:code});throw new Error("Microphone blocked – allow the mic in your browser")}
+ const peers={},ch=sb.channel("psl-comm",{config:{broadcast:{self:false}}}),send=o=>ch.send({type:"broadcast",event:"sig",payload:o}),close=id=>{if(peers[id]){try{peers[id].close()}catch(e){}delete peers[id]}};
+ ch.on("broadcast",{event:"sig"},async({payload:m})=>{try{
+  if(m.t==="join"){close(m.id);const pc=new RTCPeerConnection(ICE);peers[m.id]=pc;stream.getTracks().forEach(t=>pc.addTrack(t,stream));pc.onicecandidate=e=>e.candidate&&send({t:"ice",to:m.id,c:e.candidate});pc.onconnectionstatechange=()=>{if(pc.connectionState==="failed")close(m.id)};const o=await pc.createOffer();await pc.setLocalDescription(o);send({t:"offer",to:m.id,sdp:pc.localDescription})}
+  else if(m.t==="answer"&&peers[m.id])await peers[m.id].setRemoteDescription(m.sdp);
+  else if(m.t==="ice"&&peers[m.id])await peers[m.id].addIceCandidate(m.c);
+  else if(m.t==="leave")close(m.id)}catch(e){}}).subscribe();
+ let stopped=false;const stop=async()=>{if(stopped)return;stopped=true;clearInterval(hb);stream.getTracks().forEach(t=>t.stop());Object.keys(peers).forEach(close);sb.removeChannel(ch);try{await sb.rpc("mic_release",{p_team:team,p_code:code})}catch(e){}},
+ hb=setInterval(async()=>{const r=await sb.rpc("mic_claim",{p_team:team,p_code:code});if(!r.data||!r.data.ok){await stop();onLost&&onLost()}},10000);
+ return stop}
+
+// --- listener (everyone else): one button, listens to whoever holds the mic
+const ML={on:false,pc:null,ch:null,t:null,holder:"",id:(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now()),btn:null,aud:null};
+const mlsend=o=>ML.ch&&ML.ch.send({type:"broadcast",event:"sig",payload:o});
+function mlStop(){ML.on=false;clearInterval(ML.t);if(ML.pc){try{ML.pc.close()}catch(e){}ML.pc=null}if(ML.ch){mlsend({t:"leave",id:ML.id});sb.removeChannel(ML.ch);ML.ch=null}if(ML.aud)ML.aud.srcObject=null}
+function mlStart(){ML.on=true;ML.ch=sb.channel("psl-comm",{config:{broadcast:{self:false}}});
+ ML.ch.on("broadcast",{event:"sig"},async({payload:m})=>{if(m.to!==ML.id)return;try{
+  if(m.t==="offer"){if(ML.pc)ML.pc.close();const pc=ML.pc=new RTCPeerConnection(ICE);pc.ontrack=e=>{ML.aud.srcObject=e.streams[0];ML.aud.play().catch(()=>{})};pc.onicecandidate=e=>e.candidate&&mlsend({t:"ice",id:ML.id,c:e.candidate});await pc.setRemoteDescription(m.sdp);const an=await pc.createAnswer();await pc.setLocalDescription(an);mlsend({t:"answer",id:ML.id,sdp:pc.localDescription})}
+  else if(m.t==="ice"&&ML.pc)await ML.pc.addIceCandidate(m.c)}catch(e){}});
+ ML.ch.subscribe(s=>{if(s==="SUBSCRIBED"){mlsend({t:"join",id:ML.id});ML.t=setInterval(()=>{if(ML.holder&&!(ML.pc&&ML.pc.connectionState==="connected"))mlsend({t:"join",id:ML.id})},4000)}})}
+export function micListener(S,o={}){
+ const h=setv(S,"mic_holder"),d=dock(o.bottom);if(!ML.btn){ML.aud=document.createElement("audio");ML.aud.autoplay=true;ML.aud.style.display="none";document.body.appendChild(ML.aud);
+  ML.btn=document.createElement("button");ML.btn.className="s";ML.btn.style.cssText="text-align:left";ML.btn.onclick=()=>{ML.on?mlStop():mlStart();micListener(window.__S||S,o)};d.insertBefore(ML.btn,d.firstChild)}
+ window.__S=S;if(h!==ML.holder){ML.holder=h;if(ML.on&&ML.pc){try{ML.pc.close()}catch(e){}ML.pc=null;if(h)mlsend({t:"join",id:ML.id})}}
+ const mine=o.mine&&h===o.mine;ML.btn.style.display=mine||(!h&&!ML.on)?"none":"";
+ ML.btn.textContent=ML.on?(h?"🎧 Listening to "+holderName(S,h)+" (tap to stop)":"🎧 Listening… nobody is speaking (tap to stop)"):"🎧 "+holderName(S,h)+" is speaking – tap to listen"}
+
+// --- comments feed (last 60, realtime + 8 s safety poll)
+export function commentFeed(cb){let list=[];const load=async()=>{const {data}=await sb.from("comments").select("*").order("id",{ascending:false}).limit(60);if(data){list=data.reverse();cb(list)}};load();
+ sb.channel("cm-"+Math.random().toString(36).slice(2)).on("postgres_changes",{event:"*",schema:"public",table:"comments"},p=>{if(p.eventType==="INSERT"){if(!list.some(c=>c.id===p.new.id))list.push(p.new);list=list.slice(-60)}else if(p.eventType==="DELETE")list=list.filter(c=>c.id!==p.old.id);cb(list)}).subscribe();
+ setInterval(()=>{if(!document.hidden)load()},8000)}
+const CM={list:[],open:false,seen:0,ready:false};
+export function mountComments(S,o={}){
+ const d=dock(o.bottom),on=setv(S,"comments_on")!=="0";let box=document.getElementById("cmBox");
+ if(!box){box=document.createElement("div");box.id="cmBox";box.style.cssText="background:#062722f2;border:1px solid #F5C518;border-radius:12px;overflow:hidden;color:#fff;font:14px system-ui,sans-serif;box-shadow:0 6px 22px #000a";
+  box.innerHTML=`<div id=cmBar style="padding:10px 12px;cursor:pointer;display:flex;gap:8px;align-items:center"><b>💬</b><span id=cmLast style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Fan comments</span><span id=cmN style="background:#F5C518;color:#000;border-radius:10px;padding:0 7px;font-weight:700;display:none"></span></div><div id=cmPanel style="display:none"><div id=cmList style="max-height:40vh;overflow:auto;padding:4px 12px"></div>${o.canPost?`<div style="padding:8px;border-top:1px solid #174C3D;display:grid;gap:6px"><div style="display:flex;gap:6px"><input id=cmName maxlength=24 placeholder="Your name" style="flex:1;min-width:0"><select id=cmTeam style="flex:1;min-width:0"></select></div><div style="display:flex;gap:6px"><input id=cmText maxlength=160 placeholder="Your pick / comment…" style="flex:1;min-width:0"><button id=cmSend>Send</button></div><small id=cmErr style="color:#ff8a80"></small></div>`:""}</div>`;
+  d.appendChild(box);const q=s=>box.querySelector(s);
+  q("#cmBar").onclick=()=>{CM.open=!CM.open;q("#cmPanel").style.display=CM.open?"block":"none";if(CM.open){CM.seen=Math.max(0,...CM.list.map(c=>c.id));q("#cmList").scrollTop=1e9}paint()};
+  let vid=null;try{vid=localStorage.getItem("cmVoter")}catch(e){}if(!vid){vid=crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now();try{localStorage.setItem("cmVoter",vid)}catch(e){}}
+  if(o.canPost){try{q("#cmName").value=localStorage.getItem("cmName")||""}catch(e){}
+   const send=async()=>{const t=q("#cmText").value.trim(),n=q("#cmName").value.trim(),tm=q("#cmTeam").value;if(!t)return;try{localStorage.setItem("cmName",n)}catch(e){}q("#cmErr").textContent="";const {error}=await sb.rpc("post_comment",{p_voter:vid,p_name:n,p_body:(tm?"@"+tm+" ":"")+t});if(error)q("#cmErr").textContent=error.message;else q("#cmText").value=""};
+   q("#cmSend").onclick=send;q("#cmText").onkeydown=e=>{if(e.key==="Enter")send()}}
+  box.addEventListener("click",async e=>{const id=e.target.dataset&&e.target.dataset.del;if(id)await sb.from("comments").delete().eq("id",id)});
+  commentFeed(l=>{CM.list=l;CM.ready=true;paint()})}
+ box.style.display=on||o.del?"":"none";
+ if(o.canPost){const sel=box.querySelector("#cmTeam"),opts='<option value="">Whole auction</option>'+(S.teams||[]).map(t=>`<option value="${esc(t.name)}">For: ${esc(t.name)}</option>`).join("");if(sel&&sel.dataset.h!==opts){const v=sel.value;sel.innerHTML=opts;sel.dataset.h=opts;sel.value=v}}
+ CM.o=o;paint();
+ function paint(){const b=document.getElementById("cmBox");if(!b)return;const o=CM.o||{},L=CM.list,last=L[L.length-1],un=CM.open?0:L.filter(c=>c.id>CM.seen).length;
+  if(!CM.seen&&L.length&&!CM.open&&!CM.init){CM.seen=Math.max(...L.map(c=>c.id));CM.init=1}
+  b.querySelector("#cmLast").textContent=last?`${last.name}: ${last.body}`:"Fan comments – no comments yet";const n=b.querySelector("#cmN");n.style.display=un?"":"none";n.textContent=un;
+  const hi=c=>o.team&&c.body.startsWith("@"+o.team);
+  const h=L.map(c=>`<div style="padding:5px 0;border-bottom:1px solid #174C3D;${hi(c)?"border-left:3px solid #F5C518;padding-left:6px;background:#F5C51822":""}"><b style="color:#F5C518">${esc(c.name)}</b> ${esc(c.body)}${o.del?` <button data-del="${c.id}" style="float:right;padding:0 6px;background:none;border:1px solid #D9534F;color:#D9534F;border-radius:6px">✕</button>`:""}</div>`).join("")||"<small>No comments yet</small>";
+  const lst=b.querySelector("#cmList");if(lst.dataset.h!==h){const atEnd=lst.scrollTop+lst.clientHeight>=lst.scrollHeight-30;lst.dataset.h=h;lst.innerHTML=h;if(atEnd||CM.open)lst.scrollTop=1e9}}
+}
