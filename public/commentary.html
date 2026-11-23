@@ -1,23 +1,8 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Commentary</title><link rel=stylesheet href=style.css></head><body>
 <div class=wrap style="max-width:520px;margin:30px auto;padding:0 12px"><div class=card><h3 style="margin-top:0">🎙 Live commentary</h3>
-<small>Enter the commentary PIN the admin gave you, press <b>Go live</b> and allow the microphone. Use <b>headphones</b> so the speaker does not echo into your mic. Keep this tab open while you speak.</small>
-<div class=row style="margin-top:12px"><input id=pin type=password placeholder="Commentary PIN" style="flex:1;min-width:160px"><button id=go>Go live</button><button id=stop class=d style="display:none">Stop</button></div>
-<div id=st style="margin-top:12px;font-weight:600"></div></div></div>
+<small>Enter the commentary PIN the admin gave you, then press the button. Everyone in the auction hears you, and you hear them. Use <b>headphones</b> so the speaker does not echo into your mic. Tap the same button again to mute / unmute yourself.</small>
+<div style="display:grid;gap:10px;margin-top:12px"><input id=pin type=password placeholder="Commentary PIN"><div id=vb></div></div></div></div>
 <script type=module>
-import {sb} from "./lib.js";
-const $=id=>document.getElementById(id),ICE={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
-let stream=null,ch=null,peers={},PIN="";
-const say=t=>$("st").textContent=t,send=o=>ch&&ch.send({type:"broadcast",event:"sig",payload:o}),count=()=>say("🔴 You are LIVE · "+Object.keys(peers).length+" listening");
-const close=id=>{if(peers[id]){try{peers[id].close()}catch(e){}delete peers[id]}};
-$("go").onclick=async()=>{PIN=$("pin").value;if(!PIN)return say("Enter the PIN");
- const {data,error}=await sb.rpc("commentary_live",{p_pin:PIN,p_on:true});if(error||!data)return say(error?error.message:"Wrong PIN");
- try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}catch(e){await sb.rpc("commentary_live",{p_pin:PIN,p_on:false});return say("Microphone blocked – allow the mic in your browser and try again")}
- ch=sb.channel("psl-comm",{config:{broadcast:{self:false}}});
- ch.on("broadcast",{event:"sig"},async({payload:m})=>{try{
-  if(m.t==="join"){close(m.id);const pc=new RTCPeerConnection(ICE);peers[m.id]=pc;stream.getTracks().forEach(t=>pc.addTrack(t,stream));pc.onicecandidate=e=>e.candidate&&send({t:"ice",to:m.id,c:e.candidate});pc.onconnectionstatechange=()=>{if(["failed","closed"].includes(pc.connectionState))close(m.id);count()};const o=await pc.createOffer();await pc.setLocalDescription(o);send({t:"offer",to:m.id,sdp:pc.localDescription})}
-  else if(m.t==="answer"&&peers[m.id])await peers[m.id].setRemoteDescription(m.sdp);
-  else if(m.t==="ice"&&peers[m.id])await peers[m.id].addIceCandidate(m.c);
-  else if(m.t==="leave")close(m.id)}catch(e){}});
- ch.subscribe(s=>{if(s==="SUBSCRIBED"){count();$("go").style.display="none";$("stop").style.display=""}})};
-$("stop").onclick=async()=>{if(stream)stream.getTracks().forEach(t=>t.stop());Object.keys(peers).forEach(close);if(ch){sb.removeChannel(ch);ch=null}await sb.rpc("commentary_live",{p_pin:PIN,p_on:false});$("go").style.display="";$("stop").style.display="none";say("Stopped")};
+import {mountVoice} from "./lib.js";
+mountVoice({role:"commentary",pin:()=>document.getElementById("pin").value,into:document.getElementById("vb")});
 </script></body></html>

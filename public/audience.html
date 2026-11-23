@@ -86,7 +86,7 @@ function drawPred(){const a=S.auction[0]||{},p=S.players.find(x=>x.id===a.player
 pr.onclick=async e=>{const b=e.target.closest("[data-t]"),a=S.auction[0]||{};if(!b||a.state!=="live")return;let n=ls("pn");if(!n){n=prompt("Your name for the predictor leaderboard")||"Guest";ls("pn",n)}
  const {error}=await sb.rpc("predict",{p_player:a.player_id,p_team:b.dataset.t,p_voter:VID,p_name:n});if(error)return alert(error.message);ls("pk_"+a.player_id,b.dataset.t);pull2()};
 const openT=new Set();sqb.addEventListener("toggle",e=>{const t=e.target.dataset?.t;if(t)e.target.open?openT.add(t):openT.delete(t)},true);
-sync(["players","teams","auction","history","bids","announcement","rules","settings","ticker_items","reaction_counts","final_xi"],o=>{Object.assign(S,o);draw();xisDraw();rkDraw();stmDraw();announce();upDraw();_ml(S,{bottom:58});_mc(S,{canPost:true,bottom:58})},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
+sync(["players","teams","auction","history","bids","announcement","rules","settings","ticker_items","reaction_counts","final_xi"],o=>{Object.assign(S,o);draw();xisDraw();rkDraw();stmDraw();announce();upDraw();_mv({role:"listener",bottom:58});_mc(S,{canPost:true,bottom:58})},ok=>{c.className="dot"+(ok?" on":"");cs.textContent=ok?"Live":"Reconnecting…"});
 // instant switch changes from the admin (broadcast) + a light safety poll
 sb.channel("ctl").on("broadcast",{event:"cfg"},p=>{const {key,val}=p.payload||{};if(!key)return;OV[key]={val,t:Date.now()};draw()}).subscribe();
 let setSig="";setInterval(async()=>{try{const {data}=await sb.from("settings").select("*");if(!data)return;const sig=JSON.stringify(data);if(sig!==setSig){setSig=sig;S.settings=data;draw()}}catch(e){}},3000);
@@ -108,7 +108,7 @@ function achDraw(){const L=achievements();const ids=new Set(L.map(x=>x.id));
  if(seenAch===null)seenAch=ids;else L.filter(x=>!seenAch.has(x.id)).forEach(x=>{seenAch.add(x.id);const d=document.createElement("div");d.className="achp";d.innerHTML=`<b style="font-size:1.4em">${x.i}</b> <b>${esc(x.t)}</b><br><small>${esc(x.s)} · ${esc(x.d)}</small>`;achp.appendChild(d);setTimeout(()=>d.remove(),4800)});
  put(ac,[...L].reverse().slice(0,12).map(x=>`<span class=ach><b>${x.i}</b> ${esc(x.t)}<small>${esc(x.s)} · ${esc(x.d)}</small></span>`).join("")||"<small>Achievements appear as milestones are reached</small>")}
 // fan zone (stable DOM so bars animate)
-import {xiOrder as _xo,teamLogo as _tl,foreign as _fo,esc as _es,sb as _sbc,mountStream as _ms,micListener as _ml,mountComments as _mc,rating as _rt,dealTag as _dt,wrappedBlob as _wb,shareBlob as _sb,fmt as _fm} from "./lib.js";
+import {xiOrder as _xo,teamLogo as _tl,foreign as _fo,esc as _es,sb as _sbc,mountStream as _ms,mountVoice as _mv,mountComments as _mc,rating as _rt,dealTag as _dt,wrappedBlob as _wb,shareBlob as _sb,fmt as _fm} from "./lib.js";
 const bnHtml=(t,x)=>{const b=_xo((S.players||[]).filter(p=>p.team_id===t.id&&(p.status==="Sold"||p.acq)&&!x.player_ids.includes(p.id)));return b.length?`<div style="margin-top:10px"><small><b>BENCH STRENGTH</b></small></div>`+b.map(p=>`<div>${_es(p.name)}${_fo(p)?" ✈️":""}</div>`).join(""):""};
 let RT={},MY={};try{MY=JSON.parse(localStorage.getItem("myRate")||"{}")}catch(e){}
 let RVID=localStorage.getItem("rateVoterId");if(!RVID){RVID=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());try{localStorage.setItem("rateVoterId",RVID)}catch(e){}}

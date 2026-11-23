@@ -141,39 +141,40 @@ export function mountStream(S){
 
 // ================= Live chat dock: fan comments + one-at-a-time mic (P2P over Supabase Realtime) =================
 export const ICE={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
-export function dock(bottom){let d=document.getElementById("dock");if(!d){d=document.createElement("div");d.id="dock";d.style.cssText="position:fixed;left:10px;z-index:9997;display:flex;flex-direction:column;gap:8px;width:min(360px,calc(100vw - 20px))";document.body.appendChild(d)}if(bottom!=null)d.style.bottom=bottom+"px";else if(!d.style.bottom)d.style.bottom="10px";return d}
+export function dock(bottom){let d=document.getElementById("dock");if(!d){d=document.createElement("div");d.id="dock";d.style.cssText="position:fixed;left:10px;z-index:9997;display:flex;flex-direction:column;gap:8px;width:min(420px,calc(100vw - 20px));max-height:calc(100vh - 20px);overflow:visible";document.body.appendChild(d)}if(bottom!=null)d.style.bottom=bottom+"px";else if(!d.style.bottom)d.style.bottom="10px";return d}
 const setv=(S,k)=>((S.settings||[]).find(x=>x.key===k)||{}).val||"";
-const holderName=(S,h)=>h==="commentary"?"Commentator":((S.teams||[]).find(t=>t.id===h)||{}).name||"Someone";
 
-// --- speaker (a bidder presses "Talk"): returns stop()
-export async function micStart(team,code,onLost){
- const {data,error}=await sb.rpc("mic_claim",{p_team:team,p_code:code});if(error)throw error;if(!data.ok)throw new Error(data.holder+" is speaking right now");
- let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}catch(e){await sb.rpc("mic_release",{p_team:team,p_code:code});throw new Error("Microphone blocked – allow the mic in your browser")}
- const peers={},ch=sb.channel("psl-comm",{config:{broadcast:{self:false}}}),send=o=>ch.send({type:"broadcast",event:"sig",payload:o}),close=id=>{if(peers[id]){try{peers[id].close()}catch(e){}delete peers[id]}};
- ch.on("broadcast",{event:"sig"},async({payload:m})=>{try{
-  if(m.t==="join"){close(m.id);const pc=new RTCPeerConnection(ICE);peers[m.id]=pc;stream.getTracks().forEach(t=>pc.addTrack(t,stream));pc.onicecandidate=e=>e.candidate&&send({t:"ice",to:m.id,c:e.candidate});pc.onconnectionstatechange=()=>{if(pc.connectionState==="failed")close(m.id)};const o=await pc.createOffer();await pc.setLocalDescription(o);send({t:"offer",to:m.id,sdp:pc.localDescription})}
-  else if(m.t==="answer"&&peers[m.id])await peers[m.id].setRemoteDescription(m.sdp);
-  else if(m.t==="ice"&&peers[m.id])await peers[m.id].addIceCandidate(m.c);
-  else if(m.t==="leave")close(m.id)}catch(e){}}).subscribe();
- let stopped=false;const stop=async()=>{if(stopped)return;stopped=true;clearInterval(hb);stream.getTracks().forEach(t=>t.stop());Object.keys(peers).forEach(close);sb.removeChannel(ch);try{await sb.rpc("mic_release",{p_team:team,p_code:code})}catch(e){}},
- hb=setInterval(async()=>{const r=await sb.rpc("mic_claim",{p_team:team,p_code:code});if(!r.data||!r.data.ok){await stop();onLost&&onLost()}},10000);
- return stop}
-
-// --- listener (everyone else): one button, listens to whoever holds the mic
-const ML={on:false,pc:null,ch:null,t:null,holder:"",id:(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now()),btn:null,aud:null};
-const mlsend=o=>ML.ch&&ML.ch.send({type:"broadcast",event:"sig",payload:o});
-function mlStop(){ML.on=false;clearInterval(ML.t);if(ML.pc){try{ML.pc.close()}catch(e){}ML.pc=null}if(ML.ch){mlsend({t:"leave",id:ML.id});sb.removeChannel(ML.ch);ML.ch=null}if(ML.aud)ML.aud.srcObject=null}
-function mlStart(){ML.on=true;ML.ch=sb.channel("psl-comm",{config:{broadcast:{self:false}}});
- ML.ch.on("broadcast",{event:"sig"},async({payload:m})=>{if(m.to!==ML.id)return;try{
-  if(m.t==="offer"){if(ML.pc)ML.pc.close();const pc=ML.pc=new RTCPeerConnection(ICE);pc.ontrack=e=>{ML.aud.srcObject=e.streams[0];ML.aud.play().catch(()=>{})};pc.onicecandidate=e=>e.candidate&&mlsend({t:"ice",id:ML.id,c:e.candidate});await pc.setRemoteDescription(m.sdp);const an=await pc.createAnswer();await pc.setLocalDescription(an);mlsend({t:"answer",id:ML.id,sdp:pc.localDescription})}
-  else if(m.t==="ice"&&ML.pc)await ML.pc.addIceCandidate(m.c)}catch(e){}});
- ML.ch.subscribe(s=>{if(s==="SUBSCRIBED"){mlsend({t:"join",id:ML.id});ML.t=setInterval(()=>{if(ML.holder&&!(ML.pc&&ML.pc.connectionState==="connected"))mlsend({t:"join",id:ML.id})},4000)}})}
-export function micListener(S,o={}){
- const h=setv(S,"mic_holder"),d=dock(o.bottom);if(!ML.btn){ML.aud=document.createElement("audio");ML.aud.autoplay=true;ML.aud.style.display="none";document.body.appendChild(ML.aud);
-  ML.btn=document.createElement("button");ML.btn.className="s";ML.btn.style.cssText="text-align:left";ML.btn.onclick=()=>{ML.on?mlStop():mlStart();micListener(window.__S||S,o)};d.insertBefore(ML.btn,d.firstChild)}
- window.__S=S;if(h!==ML.holder){ML.holder=h;if(ML.on&&ML.pc){try{ML.pc.close()}catch(e){}ML.pc=null;if(h)mlsend({t:"join",id:ML.id})}}
- const mine=o.mine&&h===o.mine;ML.btn.style.display=mine||(!h&&!ML.on)?"none":"";
- ML.btn.textContent=ML.on?(h?"🎧 Listening to "+holderName(S,h)+" (tap to stop)":"🎧 Listening… nobody is speaking (tap to stop)"):"🎧 "+holderName(S,h)+" is speaking – tap to listen"}
+// ---- Voice room (LiveKit relay): everyone hears everyone; each person has ONE button to mute / unmute their own mic.
+let LKP=null;const loadLK=()=>LKP||(LKP=new Promise((ok,no)=>{if(window.LivekitClient)return ok(window.LivekitClient);const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.umd.js";s.onload=()=>ok(window.LivekitClient);s.onerror=()=>{LKP=null;no(new Error("Could not load the voice library – check your internet"))};document.head.appendChild(s)}));
+const V={room:null,btn:null,o:{},micOn:false,locked:false,hearMuted:false,speakers:[],auds:new Set()};
+function vpaint(){if(!V.btn)return;const o=V.o,pub=o.role!=="listener",sp=V.speakers.length?" · 🗣 "+V.speakers.join(", "):"";let t;
+ if(!V.room)t=pub?"🎤 Join voice & talk":"🔊 Tap to hear the live voice";
+ else if(V.locked)t="🔇 Muted by admin (you can still hear)";
+ else if(pub)t=V.micOn?"🔴 Mic ON – tap to mute":"🎤 Mic muted – tap to talk";
+ else t=V.hearMuted?"🔇 Voice muted – tap to hear":"🔊 Hearing the live voice – tap to mute";
+ V.btn.textContent=t+sp;V.btn.className=(pub&&V.micOn&&!V.locked)?"d":"s"}
+async function vclick(){const o=V.o,r=V.room;
+ if(!r){V.btn.textContent="Connecting…";try{const LK=await loadLK(),pin=typeof o.pin==="function"?o.pin():o.pin,b=o.role==="team"?{role:"team",team:o.team,code:o.code}:o.role==="admin"?{role:"admin"}:o.role==="commentary"?{role:"commentary",pin}:{role:"listener"},h={"Content-Type":"application/json"};
+   if(o.role==="admin"){const {data:{session}}=await sb.auth.getSession();h.Authorization="Bearer "+session.access_token}
+   const x=await fetch("/api/voice",{method:"POST",headers:h,body:JSON.stringify(b)}).then(r=>r.json()).catch(()=>({error:"Voice server not reachable"}));if(!x.token)throw new Error(x.error||"Voice is not available");
+   const room=new LK.Room({adaptiveStream:false,dynacast:false});V.room=room;V.locked=false;V.micOn=false;
+   room.on(LK.RoomEvent.TrackSubscribed,t=>{if(t.kind==="audio"){const el=t.attach();el.style.display="none";document.body.appendChild(el);el.muted=V.hearMuted;V.auds.add(el)}});
+   room.on(LK.RoomEvent.TrackUnsubscribed,t=>{t.detach().forEach(e=>{V.auds.delete(e);e.remove()})});
+   room.on(LK.RoomEvent.ActiveSpeakersChanged,s=>{V.speakers=s.map(p=>p.name||p.identity).slice(0,3);vpaint()});
+   room.on(LK.RoomEvent.ParticipantPermissionsChanged,(prev,p)=>{if(p.isLocal){V.locked=!room.localParticipant.permissions.canPublish;if(V.locked)V.micOn=false;vpaint()}});
+   room.on(LK.RoomEvent.Disconnected,()=>{V.room=null;V.micOn=false;V.speakers=[];V.auds.forEach(e=>e.remove());V.auds.clear();vpaint()});
+   await room.connect(x.url,x.token);await room.startAudio();
+   if(o.role!=="listener"){await room.localParticipant.setMicrophoneEnabled(true);V.micOn=true}
+   vpaint();if(o.onRoom)o.onRoom(room)}catch(e){V.room=null;vpaint();alert(e.message)}return}
+ if(o.role==="listener"){V.hearMuted=!V.hearMuted;V.auds.forEach(e=>e.muted=V.hearMuted);vpaint();return}
+ if(V.locked)return alert("The admin has muted you");
+ try{V.micOn=!V.micOn;await r.localParticipant.setMicrophoneEnabled(V.micOn)}catch(e){V.micOn=false;alert("Microphone blocked – allow the mic in your browser")}vpaint()}
+export function mountVoice(o){V.o=o;if(V.btn)return;V.btn=document.createElement("button");V.btn.style.cssText="text-align:left;white-space:normal";V.btn.onclick=vclick;const d=o.into||dock(o.bottom);o.into?d.appendChild(V.btn):d.insertBefore(V.btn,d.firstChild);vpaint()}
+// Admin: list of everyone in the voice room with a Mute / Allow button next to each name
+export function voiceAdminPanel(room){let p=document.getElementById("vaPanel");if(!p){p=document.createElement("div");p.id="vaPanel";p.style.cssText="background:#062722f2;border:1px solid #174C3D;border-radius:12px;color:#fff;font:14px system-ui,sans-serif;padding:8px 10px;max-height:30vh;overflow:auto";dock().appendChild(p)}
+ const LK=window.LivekitClient,draw=()=>{const L=[...room.remoteParticipants.values()];p.innerHTML="<b>🎙 In the voice room ("+L.length+")</b>"+(L.map(x=>{const can=x.permissions?x.permissions.canPublish:true,fan=/^fan-/.test(x.identity);return fan?"":`<div style="display:flex;gap:8px;align-items:center;padding:3px 0"><span style="flex:1">${esc(x.name||x.identity)} ${x.isSpeaking?"🗣":x.isMicrophoneEnabled?"🎤":""}</span><button data-vid="${esc(x.identity)}" data-allow="${can?0:1}" class="${can?"d":"s"}" style="padding:2px 10px">${can?"Mute":"Allow"}</button></div>`}).join("")||"")+(L.filter(x=>/^fan-/.test(x.identity)).length?`<div><small>+ ${L.filter(x=>/^fan-/.test(x.identity)).length} listening</small></div>`:"")};
+ p.onclick=async e=>{const id=e.target.dataset&&e.target.dataset.vid;if(!id)return;const {data:{session}}=await sb.auth.getSession(),r=await fetch("/api/voice",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({action:"mute",identity:id,allow:e.target.dataset.allow==="1"})}).then(r=>r.json()).catch(()=>({error:"Voice server not reachable"}));if(r.error)alert(r.error)};
+ [LK.RoomEvent.ParticipantConnected,LK.RoomEvent.ParticipantDisconnected,LK.RoomEvent.ParticipantPermissionsChanged,LK.RoomEvent.TrackMuted,LK.RoomEvent.TrackUnmuted,LK.RoomEvent.TrackSubscribed,LK.RoomEvent.ActiveSpeakersChanged].forEach(ev=>room.on(ev,draw));draw()}
 
 // --- comments feed (last 60, realtime + 8 s safety poll)
 export function commentFeed(cb){let list=[];const load=async()=>{const {data}=await sb.from("comments").select("*").order("id",{ascending:false}).limit(60);if(data){list=data.reverse();cb(list)}};load();
@@ -183,7 +184,7 @@ const CM={list:[],open:false,seen:0,ready:false};
 export function mountComments(S,o={}){
  const d=dock(o.bottom),on=setv(S,"comments_on")!=="0";let box=document.getElementById("cmBox");
  if(!box){box=document.createElement("div");box.id="cmBox";box.style.cssText="background:#062722f2;border:1px solid #F5C518;border-radius:12px;overflow:hidden;color:#fff;font:14px system-ui,sans-serif;box-shadow:0 6px 22px #000a";
-  box.innerHTML=`<div id=cmBar style="padding:10px 12px;cursor:pointer;display:flex;gap:8px;align-items:center"><b>💬</b><span id=cmLast style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Fan comments</span><span id=cmN style="background:#F5C518;color:#000;border-radius:10px;padding:0 7px;font-weight:700;display:none"></span></div><div id=cmPanel style="display:none"><div id=cmList style="max-height:40vh;overflow:auto;padding:4px 12px"></div>${o.canPost?`<div style="padding:8px;border-top:1px solid #174C3D;display:grid;gap:6px"><div style="display:flex;gap:6px"><input id=cmName maxlength=24 placeholder="Your name" style="flex:1;min-width:0"><select id=cmTeam style="flex:1;min-width:0"></select></div><div style="display:flex;gap:6px"><input id=cmText maxlength=160 placeholder="Your pick / comment…" style="flex:1;min-width:0"><button id=cmSend>Send</button></div><small id=cmErr style="color:#ff8a80"></small></div>`:""}</div>`;
+  box.innerHTML=`<div id=cmBar style="padding:10px 12px;cursor:pointer;display:flex;gap:8px;align-items:center"><b>💬</b><span id=cmLast style="flex:1;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;line-height:1.3">Fan comments</span><span id=cmN style="background:#F5C518;color:#000;border-radius:10px;padding:0 7px;font-weight:700;display:none"></span></div><div id=cmPanel style="display:none"><div id=cmList style="max-height:min(55vh,calc(100vh - 230px));overflow:auto;padding:4px 12px;word-break:break-word"></div>${o.canPost?`<div style="padding:8px;border-top:1px solid #174C3D;display:grid;gap:6px"><div style="display:flex;gap:6px"><input id=cmName maxlength=24 placeholder="Your name" style="flex:1;min-width:0"><select id=cmTeam style="flex:1;min-width:0"></select></div><div style="display:flex;gap:6px"><input id=cmText maxlength=160 placeholder="Your pick / comment…" style="flex:1;min-width:0"><button id=cmSend>Send</button></div><small id=cmErr style="color:#ff8a80"></small></div>`:""}</div>`;
   d.appendChild(box);const q=s=>box.querySelector(s);
   q("#cmBar").onclick=()=>{CM.open=!CM.open;q("#cmPanel").style.display=CM.open?"block":"none";if(CM.open){CM.seen=Math.max(0,...CM.list.map(c=>c.id));q("#cmList").scrollTop=1e9}paint()};
   let vid=null;try{vid=localStorage.getItem("cmVoter")}catch(e){}if(!vid){vid=crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now();try{localStorage.setItem("cmVoter",vid)}catch(e){}}
