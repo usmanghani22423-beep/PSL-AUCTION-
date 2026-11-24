@@ -118,24 +118,44 @@ export const streamSrc=u=>{u=String(u||"").trim();if(!u)return"";let m=u.match(/
 export const streamHtml=S=>{const g=k=>((S.settings||[]).find(x=>x.key===k)||{}).val,src=g("stream_on")==="1"?streamSrc(g("stream_url")):"";return src?`<h3 style="margin-top:0">📺 Live stream</h3><div style="position:relative;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000"><iframe src="${src}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div><small>Sound starts muted – tap the speaker icon in the player to hear it.</small>`:""};
 
 // Floating, draggable mini player: the match stays visible while the auction is on the same screen.
-export function mountStream(S){
+export const auc=S=>Array.isArray(S.auction)?(S.auction[0]||{}):(S.auction||{});
+const FL={m:"",bad:false,t:0};
+export function stmFlash(m,bad){FL.m=m;FL.bad=!!bad;FL.t=Date.now();const w=document.getElementById("stmFloat");if(w&&w._paint){w._paint(true);setTimeout(()=>w._paint&&w._paint(true),3600)}}
+// Read-only auction summary used inside the full-screen stream (the bid page adds its bid buttons through `extra`)
+export function auctionPanel(S,extra=""){const a=auc(S),p=(S.players||[]).find(x=>x.id===a.player_id),t=(S.teams||[]).find(x=>x.id===a.bid_team_id),st=String(a.state||"idle"),
+ label=st==="live"?"🔴 LIVE":st==="sold"?"✅ SOLD":st==="unsold"?"❌ UNSOLD":st==="paused"?"⏸ PAUSED":"⏳ Waiting";
+ return `<div style="font-weight:700;color:#F5C518">${label}</div>`+(p?`<div style="font-size:1.25em;font-weight:800;margin:4px 0">${esc(p.name)}${foreign(p)?" ✈️":""}</div><div><small>${esc(p.role)} · ${esc(p.country)} · base ${fmt(p.base_price)}</small></div><div style="margin-top:8px">Current bid</div><div style="font-size:1.7em;font-weight:800;color:#F5C518">${fmt(a.current_bid||p.base_price)}</div><div><small>${t?"Leading: <b>"+esc(t.name)+"</b>":"No bid yet"}</small></div>`:"<div>Waiting for the next player…</div>")+`<div style="margin-top:10px">${extra}</div><div id=stmMsg style="min-height:1.3em;margin-top:6px;font-weight:600;color:${FL.bad?"#ff8a80":"#7CFC9A"}">${FL.m&&Date.now()-FL.t<3500?esc(FL.m):""}</div>`}
+// Floating, draggable mini player. Button ⛶ makes it full screen WITH the auction panel (and bid buttons on the bid page) beside / below the video.
+export function mountStream(S,o={}){
  const g=k=>((S.settings||[]).find(x=>x.key===k)||{}).val,src=g("stream_on")==="1"?streamSrc(g("stream_url")):"";
- let w=document.getElementById("stmFloat");if(!src){if(w)w.remove();return}
- if(w&&w.dataset.src===src)return;if(w)w.remove();
- const st={w:380,x:null,y:null,min:false},sizes=[280,380,520,720],save=()=>{try{localStorage.setItem("stmPos",JSON.stringify(st))}catch(e){}};
- try{Object.assign(st,JSON.parse(localStorage.getItem("stmPos")||"{}"))}catch(e){}
+ let w=document.getElementById("stmFloat");if(!src){if(w){try{if(document.fullscreenElement===w)document.exitFullscreen()}catch(e){}w.remove()}return}
+ if(w&&w.dataset.src===src){w._o=o;w._S=S;w._paint&&w._paint();return}
+ if(w)w.remove();
+ const st={w:380,x:null,y:null,min:false,full:false},sizes=[280,380,520,720],save=()=>{try{const{full,...c}=st;localStorage.setItem("stmPos",JSON.stringify(c))}catch(e){}};
+ try{Object.assign(st,JSON.parse(localStorage.getItem("stmPos")||"{}"))}catch(e){}st.full=false;
  const bs="background:none;border:1px solid #fff6;color:#fff;border-radius:6px;padding:0 8px;cursor:pointer;font-size:14px;line-height:20px";
- w=document.createElement("div");w.id="stmFloat";w.dataset.src=src;
- w.style.cssText="position:fixed;z-index:9998;border:1px solid #F5C518;border-radius:10px;overflow:hidden;box-shadow:0 8px 30px #000a;background:#000";
- w.innerHTML=`<div id=stmBar style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:#0b3d2e;color:#fff;cursor:move;user-select:none;touch-action:none;font:600 13px system-ui,sans-serif"><span style="flex:1">📺 Live stream</span><button id=stmSz title="Change size" style="${bs}">⤢</button><button id=stmMn title="Minimise" style="${bs}">−</button></div><div id=stmBd style="position:relative;padding-top:56.25%;background:#000"><iframe src="${src}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+ w=document.createElement("div");w.id="stmFloat";w.dataset.src=src;w._o=o;w._S=S;
+ w.innerHTML=`<div id=stmBar style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:#0b3d2e;color:#fff;cursor:move;user-select:none;touch-action:none;font:600 13px system-ui,sans-serif"><span style="flex:1">📺 Live stream</span><button id=stmFs title="Full screen" style="${bs}">⛶</button><button id=stmSz title="Change size" style="${bs}">⤢</button><button id=stmMn title="Minimise" style="${bs}">−</button></div><div id=stmMain><div id=stmBd><iframe src="${src}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div><div id=stmPanel></div></div>`;
  document.body.appendChild(w);
- const bar=w.querySelector("#stmBar"),bd=w.querySelector("#stmBd"),ifr=w.querySelector("iframe");
- const fit=()=>{const ww=Math.min(st.w,innerWidth-16);w.style.width=ww+"px";bd.style.display=st.min?"none":"block";w.querySelector("#stmMn").textContent=st.min?"+":"−";
-  if(st.x==null){w.style.right="12px";w.style.bottom="12px";w.style.left="auto";w.style.top="auto"}else{w.style.left=Math.max(0,Math.min(st.x,innerWidth-ww))+"px";w.style.top=Math.max(0,Math.min(st.y,innerHeight-34))+"px";w.style.right="auto";w.style.bottom="auto"}};
+ const q=s=>w.querySelector(s),bar=q("#stmBar"),main=q("#stmMain"),bd=q("#stmBd"),pn=q("#stmPanel"),ifr=q("iframe");
+ const fit=()=>{if(st.full){const land=innerWidth>innerHeight*1.1;
+   w.style.cssText="position:fixed;left:0;top:0;right:0;bottom:0;width:100vw;height:100dvh;z-index:99990;display:flex;flex-direction:column;background:#000;border:0;border-radius:0;overflow:hidden";
+   main.style.cssText="flex:1;min-height:0;display:flex;flex-direction:"+(land?"row":"column");bd.style.cssText="position:relative;flex:1;min-height:0;min-width:0;background:#000";
+   pn.style.cssText="display:block;overflow:auto;padding:12px 14px;background:#062722;color:#fff;font:15px system-ui,sans-serif;"+(land?"width:min(340px,40vw);":"max-height:46vh;");
+   q("#stmFs").textContent="✕ Exit";q("#stmSz").style.display=q("#stmMn").style.display="none";return}
+  const ww=Math.min(st.w,innerWidth-16);w.style.cssText="position:fixed;z-index:9998;border:1px solid #F5C518;border-radius:10px;overflow:hidden;box-shadow:0 8px 30px #000a;background:#000;width:"+ww+"px;"+(st.x==null?"right:12px;bottom:12px;":"left:"+Math.max(0,Math.min(st.x,innerWidth-ww))+"px;top:"+Math.max(0,Math.min(st.y,innerHeight-34))+"px;");
+  main.style.cssText="";bd.style.cssText="position:relative;padding-top:56.25%;background:#000;"+(st.min?"display:none":"");pn.style.cssText="display:none";
+  q("#stmFs").textContent="⛶";q("#stmSz").style.display=q("#stmMn").style.display="";q("#stmMn").textContent=st.min?"+":"−"};
+ w._paint=force=>{if(!st.full)return;const h=w._o.panel?w._o.panel():auctionPanel(w._S);if(force||pn.dataset.h!==h){pn.dataset.h=h;pn.innerHTML=h}};
+ const setFull=on=>{st.full=on;fit();w._paint(true);if(on){try{const p=w.requestFullscreen&&w.requestFullscreen();if(p&&p.then)p.then(()=>{w._real=true}).catch(()=>{})}catch(e){}}else{w._real=false;try{if(document.fullscreenElement===w)document.exitFullscreen()}catch(e){}}};
+ document.addEventListener("fullscreenchange",()=>{if(st.full&&w._real&&!document.fullscreenElement)setFull(false)});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&st.full)setFull(false)});
+ pn.onclick=e=>{if(w._o.panelClick)w._o.panelClick(e)};
  fit();addEventListener("resize",fit);
- w.querySelector("#stmSz").onclick=()=>{const i=sizes.indexOf(st.w);st.w=sizes[(i+1)%sizes.length];fit();save()};
- w.querySelector("#stmMn").onclick=()=>{st.min=!st.min;fit();save()};
- bar.onpointerdown=e=>{if(e.target.tagName==="BUTTON")return;const r=w.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;bar.setPointerCapture(e.pointerId);ifr.style.pointerEvents="none";
+ q("#stmFs").onclick=()=>setFull(!st.full);
+ q("#stmSz").onclick=()=>{const i=sizes.indexOf(st.w);st.w=sizes[(i+1)%sizes.length];fit();save()};
+ q("#stmMn").onclick=()=>{st.min=!st.min;fit();save()};
+ bar.onpointerdown=e=>{if(st.full||e.target.tagName==="BUTTON")return;const r=w.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;bar.setPointerCapture(e.pointerId);ifr.style.pointerEvents="none";
   bar.onpointermove=ev=>{st.x=ev.clientX-dx;st.y=ev.clientY-dy;fit()};bar.onpointerup=()=>{bar.onpointermove=null;bar.onpointerup=null;ifr.style.pointerEvents="";save()}};
 }
 
@@ -144,37 +164,19 @@ export const ICE={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
 export function dock(bottom){let d=document.getElementById("dock");if(!d){d=document.createElement("div");d.id="dock";d.style.cssText="position:fixed;left:10px;z-index:9997;display:flex;flex-direction:column;gap:8px;width:min(420px,calc(100vw - 20px));max-height:calc(100vh - 20px);overflow:visible";document.body.appendChild(d)}if(bottom!=null)d.style.bottom=bottom+"px";else if(!d.style.bottom)d.style.bottom="10px";return d}
 const setv=(S,k)=>((S.settings||[]).find(x=>x.key===k)||{}).val||"";
 
-// ---- Voice room (LiveKit relay): everyone hears everyone; each person has ONE button to mute / unmute their own mic.
-let LKP=null;const loadLK=()=>LKP||(LKP=new Promise((ok,no)=>{if(window.LivekitClient)return ok(window.LivekitClient);const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.umd.js";s.onload=()=>ok(window.LivekitClient);s.onerror=()=>{LKP=null;no(new Error("Could not load the voice library – check your internet"))};document.head.appendChild(s)}));
-const V={room:null,btn:null,o:{},micOn:false,locked:false,hearMuted:false,speakers:[],auds:new Set()};
-function vpaint(){if(!V.btn)return;const o=V.o,pub=o.role!=="listener",sp=V.speakers.length?" · 🗣 "+V.speakers.join(", "):"";let t;
- if(!V.room)t=pub?"🎤 Join voice & talk":"🔊 Tap to hear the live voice";
- else if(V.locked)t="🔇 Muted by admin (you can still hear)";
- else if(pub)t=V.micOn?"🔴 Mic ON – tap to mute":"🎤 Mic muted – tap to talk";
- else t=V.hearMuted?"🔇 Voice muted – tap to hear":"🔊 Hearing the live voice – tap to mute";
- V.btn.textContent=t+sp;V.btn.className=(pub&&V.micOn&&!V.locked)?"d":"s"}
-async function vclick(){const o=V.o,r=V.room;
- if(!r){V.btn.textContent="Connecting…";try{const LK=await loadLK(),pin=typeof o.pin==="function"?o.pin():o.pin,b=o.role==="team"?{role:"team",team:o.team,code:o.code}:o.role==="admin"?{role:"admin"}:o.role==="commentary"?{role:"commentary",pin}:{role:"listener"},h={"Content-Type":"application/json"};
-   if(o.role==="admin"){const {data:{session}}=await sb.auth.getSession();h.Authorization="Bearer "+session.access_token}
-   const x=await fetch("/api/voice",{method:"POST",headers:h,body:JSON.stringify(b)}).then(r=>r.json()).catch(()=>({error:"Voice server not reachable"}));if(!x.token)throw new Error(x.error||"Voice is not available");
-   const room=new LK.Room({adaptiveStream:false,dynacast:false});V.room=room;V.locked=false;V.micOn=false;
-   room.on(LK.RoomEvent.TrackSubscribed,t=>{if(t.kind==="audio"){const el=t.attach();el.style.display="none";document.body.appendChild(el);el.muted=V.hearMuted;V.auds.add(el)}});
-   room.on(LK.RoomEvent.TrackUnsubscribed,t=>{t.detach().forEach(e=>{V.auds.delete(e);e.remove()})});
-   room.on(LK.RoomEvent.ActiveSpeakersChanged,s=>{V.speakers=s.map(p=>p.name||p.identity).slice(0,3);vpaint()});
-   room.on(LK.RoomEvent.ParticipantPermissionsChanged,(prev,p)=>{if(p.isLocal){V.locked=!room.localParticipant.permissions.canPublish;if(V.locked)V.micOn=false;vpaint()}});
-   room.on(LK.RoomEvent.Disconnected,()=>{V.room=null;V.micOn=false;V.speakers=[];V.auds.forEach(e=>e.remove());V.auds.clear();vpaint()});
-   await room.connect(x.url,x.token);await room.startAudio();
-   if(o.role!=="listener"){await room.localParticipant.setMicrophoneEnabled(true);V.micOn=true}
-   vpaint();if(o.onRoom)o.onRoom(room)}catch(e){V.room=null;vpaint();alert(e.message)}return}
- if(o.role==="listener"){V.hearMuted=!V.hearMuted;V.auds.forEach(e=>e.muted=V.hearMuted);vpaint();return}
- if(V.locked)return alert("The admin has muted you");
- try{V.micOn=!V.micOn;await r.localParticipant.setMicrophoneEnabled(V.micOn)}catch(e){V.micOn=false;alert("Microphone blocked – allow the mic in your browser")}vpaint()}
-export function mountVoice(o){V.o=o;if(V.btn)return;V.btn=document.createElement("button");V.btn.style.cssText="text-align:left;white-space:normal";V.btn.onclick=vclick;const d=o.into||dock(o.bottom);o.into?d.appendChild(V.btn):d.insertBefore(V.btn,d.firstChild);vpaint()}
-// Admin: list of everyone in the voice room with a Mute / Allow button next to each name
-export function voiceAdminPanel(room){let p=document.getElementById("vaPanel");if(!p){p=document.createElement("div");p.id="vaPanel";p.style.cssText="background:#062722f2;border:1px solid #174C3D;border-radius:12px;color:#fff;font:14px system-ui,sans-serif;padding:8px 10px;max-height:30vh;overflow:auto";dock().appendChild(p)}
- const LK=window.LivekitClient,draw=()=>{const L=[...room.remoteParticipants.values()];p.innerHTML="<b>🎙 In the voice room ("+L.length+")</b>"+(L.map(x=>{const can=x.permissions?x.permissions.canPublish:true,fan=/^fan-/.test(x.identity);return fan?"":`<div style="display:flex;gap:8px;align-items:center;padding:3px 0"><span style="flex:1">${esc(x.name||x.identity)} ${x.isSpeaking?"🗣":x.isMicrophoneEnabled?"🎤":""}</span><button data-vid="${esc(x.identity)}" data-allow="${can?0:1}" class="${can?"d":"s"}" style="padding:2px 10px">${can?"Mute":"Allow"}</button></div>`}).join("")||"")+(L.filter(x=>/^fan-/.test(x.identity)).length?`<div><small>+ ${L.filter(x=>/^fan-/.test(x.identity)).length} listening</small></div>`:"")};
- p.onclick=async e=>{const id=e.target.dataset&&e.target.dataset.vid;if(!id)return;const {data:{session}}=await sb.auth.getSession(),r=await fetch("/api/voice",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({action:"mute",identity:id,allow:e.target.dataset.allow==="1"})}).then(r=>r.json()).catch(()=>({error:"Voice server not reachable"}));if(r.error)alert(r.error)};
- [LK.RoomEvent.ParticipantConnected,LK.RoomEvent.ParticipantDisconnected,LK.RoomEvent.ParticipantPermissionsChanged,LK.RoomEvent.TrackMuted,LK.RoomEvent.TrackUnmuted,LK.RoomEvent.TrackSubscribed,LK.RoomEvent.ActiveSpeakersChanged].forEach(ev=>room.on(ev,draw));draw()}
+// ---- Commentary: the commentator (link + PIN, /commentary.html) speaks, everyone else taps one button to listen
+const CMT={on:false,pc:null,ch:null,t:null,btn:null,aud:null,id:(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now())};
+const csend=o=>CMT.ch&&CMT.ch.send({type:"broadcast",event:"sig",payload:o});
+function cmtStop(){CMT.on=false;clearInterval(CMT.t);if(CMT.pc){try{CMT.pc.close()}catch(e){}CMT.pc=null}if(CMT.ch){csend({t:"leave",id:CMT.id});sb.removeChannel(CMT.ch);CMT.ch=null}if(CMT.aud)CMT.aud.srcObject=null}
+function cmtStart(){CMT.on=true;CMT.ch=sb.channel("psl-comm",{config:{broadcast:{self:false}}});
+ CMT.ch.on("broadcast",{event:"sig"},async({payload:m})=>{if(m.to!==CMT.id)return;try{
+  if(m.t==="offer"){if(CMT.pc)CMT.pc.close();const pc=CMT.pc=new RTCPeerConnection(ICE);pc.ontrack=e=>{CMT.aud.srcObject=e.streams[0];CMT.aud.play().catch(()=>{});paintCmt()};pc.onicecandidate=e=>e.candidate&&csend({t:"ice",id:CMT.id,c:e.candidate});pc.onconnectionstatechange=paintCmt;await pc.setRemoteDescription(m.sdp);const an=await pc.createAnswer();await pc.setLocalDescription(an);csend({t:"answer",id:CMT.id,sdp:pc.localDescription})}
+  else if(m.t==="ice"&&CMT.pc)await CMT.pc.addIceCandidate(m.c)}catch(e){}});
+ CMT.ch.subscribe(s=>{if(s==="SUBSCRIBED"){csend({t:"join",id:CMT.id});CMT.t=setInterval(()=>{if(!(CMT.pc&&CMT.pc.connectionState==="connected"))csend({t:"join",id:CMT.id})},4000)}})}
+function paintCmt(){if(!CMT.btn)return;const ok=CMT.pc&&CMT.pc.connectionState==="connected";CMT.btn.textContent=CMT.on?(ok?"🎧 Listening to commentary (tap to stop)":"🎧 Connecting to commentary… (tap to stop)"):"🎧 Listen to live commentary"}
+export function mountCommentary(S,o={}){const live=setv(S,"comm_live")==="1",d=dock(o.bottom);
+ if(!CMT.btn){CMT.aud=document.createElement("audio");CMT.aud.autoplay=true;CMT.aud.style.display="none";document.body.appendChild(CMT.aud);CMT.btn=document.createElement("button");CMT.btn.className="s";CMT.btn.style.cssText="text-align:left";CMT.btn.onclick=()=>{CMT.on?cmtStop():cmtStart();paintCmt();mountCommentary(window.__CS||S,o)};d.insertBefore(CMT.btn,d.firstChild)}
+ window.__CS=S;if(!live&&CMT.on)cmtStop();CMT.btn.style.display=live||CMT.on?"":"none";paintCmt()}
 
 // --- comments feed (last 60, realtime + 8 s safety poll)
 export function commentFeed(cb){let list=[];const load=async()=>{const {data}=await sb.from("comments").select("*").order("id",{ascending:false}).limit(60);if(data){list=data.reverse();cb(list)}};load();
